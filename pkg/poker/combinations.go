@@ -1,4 +1,4 @@
-package main
+package poker
 
 // Combinations generates all k-card combinations from the given cards.
 // Uses a recursive algorithm to generate all possible selections.

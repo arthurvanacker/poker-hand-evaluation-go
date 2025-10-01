@@ -1,4 +1,6 @@
-package main
+// Package poker implements a Texas Hold'em poker hand evaluator
+// that identifies the best 5-card hand from 5, 6, or 7 cards.
+package poker
 
 import (
 	"fmt"

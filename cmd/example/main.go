@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/puupa/poker-hand-evaluation/pkg/poker"
 )
 
 func main() {
@@ -14,7 +16,7 @@ func main() {
 	fmt.Println()
 
 	// Create a new deck
-	deck := NewDeck()
+	deck := poker.NewDeck()
 	fmt.Printf("Created new deck with %d cards\n\n", len(deck.Cards))
 
 	// Shuffle the deck
@@ -49,11 +51,11 @@ func main() {
 		communityCards[3], communityCards[4])
 
 	// Combine hole cards + community cards for each player
-	player1Hand := make([]Card, 0, 7)
+	player1Hand := make([]poker.Card, 0, 7)
 	player1Hand = append(player1Hand, player1Cards...)
 	player1Hand = append(player1Hand, communityCards...)
 
-	player2Hand := make([]Card, 0, 7)
+	player2Hand := make([]poker.Card, 0, 7)
 	player2Hand = append(player2Hand, player2Cards...)
 	player2Hand = append(player2Hand, communityCards...)
 
@@ -70,45 +72,30 @@ func main() {
 	fmt.Println()
 	fmt.Println()
 
-	// Check for flushes
+	// Evaluate best hands using FindBestHand
 	fmt.Println("=== Hand Analysis ===")
-	if isFlush(player1Hand[:5]) {
-		fmt.Println("Player 1's first 5 cards form a FLUSH!")
-	}
-	if isFlush(player2Hand[:5]) {
-		fmt.Println("Player 2's first 5 cards form a FLUSH!")
-	}
+	best1 := poker.FindBestHand(player1Hand)
+	best2 := poker.FindBestHand(player2Hand)
 
-	// Check for straights
-	isStraightP1, highRankP1 := isStraight(player1Hand[:5])
-	if isStraightP1 {
-		fmt.Printf("Player 1's first 5 cards form a STRAIGHT (high: %s)!\n", highRankP1)
-	}
+	fmt.Printf("Player 1's best hand: %s\n", best1.Category)
+	fmt.Printf("Player 2's best hand: %s\n", best2.Category)
 
-	isStraightP2, highRankP2 := isStraight(player2Hand[:5])
-	if isStraightP2 {
-		fmt.Printf("Player 2's first 5 cards form a STRAIGHT (high: %s)!\n", highRankP2)
+	// Compare hands and determine winner
+	result := poker.CompareHands(best1, best2)
+	fmt.Println()
+	if result > 0 {
+		fmt.Println("🏆 Player 1 WINS!")
+	} else if result < 0 {
+		fmt.Println("🏆 Player 2 WINS!")
+	} else {
+		fmt.Println("🤝 SPLIT POT - Hands are equal!")
 	}
-
-	// Check for royal flushes
-	if detectRoyalFlush(player1Hand[:5]) {
-		fmt.Println("Player 1's first 5 cards form a ROYAL FLUSH!")
-	}
-	if detectRoyalFlush(player2Hand[:5]) {
-		fmt.Println("Player 2's first 5 cards form a ROYAL FLUSH!")
-	}
-
-	// Display rank counts
-	counts1 := rankCounts(player1Hand[:5])
-	counts2 := rankCounts(player2Hand[:5])
-	fmt.Printf("\nPlayer 1 rank distribution: %v\n", counts1)
-	fmt.Printf("Player 2 rank distribution: %v\n", counts2)
 
 	fmt.Printf("\nRemaining cards in deck: %d\n", len(deck.Cards))
 }
 
 // shuffleDeck shuffles the deck using Fisher-Yates algorithm
-func shuffleDeck(d *Deck) {
+func shuffleDeck(d *poker.Deck) {
 	for i := len(d.Cards) - 1; i > 0; i-- {
 		j := rand.Intn(i + 1)
 		d.Cards[i], d.Cards[j] = d.Cards[j], d.Cards[i]
