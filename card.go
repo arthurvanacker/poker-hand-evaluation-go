@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
-
 // Rank represents the rank of a playing card (2-14, where Ace=14)
 type Rank int
 
@@ -55,8 +50,24 @@ func (r Rank) String() string {
 		return "J"
 	case Ten:
 		return "T"
+	case Nine:
+		return "9"
+	case Eight:
+		return "8"
+	case Seven:
+		return "7"
+	case Six:
+		return "6"
+	case Five:
+		return "5"
+	case Four:
+		return "4"
+	case Three:
+		return "3"
+	case Two:
+		return "2"
 	default:
-		return string('0' + byte(r))
+		return "?"
 	}
 }
 
@@ -81,75 +92,3 @@ func (c Card) String() string {
 	return c.Rank.String() + c.Suit.String()
 }
 
-// ParseCard parses a card string (e.g., "Ah", "Kd", "10s") into a Card struct
-func ParseCard(s string) (Card, error) {
-	if len(s) < 2 || len(s) > 3 {
-		return Card{}, fmt.Errorf("invalid card string: %q (must be 2-3 characters)", s)
-	}
-
-	// Parse rank (first 1 or 2 characters)
-	var rank Rank
-	var suitChar string
-
-	if len(s) == 3 {
-		// Could be "10s" format
-		if s[:2] == "10" {
-			rank = Ten
-			suitChar = s[2:]
-		} else {
-			return Card{}, fmt.Errorf("invalid card string: %q", s)
-		}
-	} else {
-		// 2-character format like "Ah" or "9d"
-		rankChar := s[0]
-		suitChar = s[1:]
-
-		switch rankChar {
-		case 'A', 'a':
-			rank = Ace
-		case 'K', 'k':
-			rank = King
-		case 'Q', 'q':
-			rank = Queen
-		case 'J', 'j':
-			rank = Jack
-		case 'T', 't':
-			rank = Ten
-		case '9':
-			rank = Nine
-		case '8':
-			rank = Eight
-		case '7':
-			rank = Seven
-		case '6':
-			rank = Six
-		case '5':
-			rank = Five
-		case '4':
-			rank = Four
-		case '3':
-			rank = Three
-		case '2':
-			rank = Two
-		default:
-			return Card{}, fmt.Errorf("invalid rank: %q", rankChar)
-		}
-	}
-
-	// Parse suit (last character, case-insensitive)
-	var suit Suit
-	switch strings.ToLower(suitChar) {
-	case "h":
-		suit = Hearts
-	case "d":
-		suit = Diamonds
-	case "c":
-		suit = Clubs
-	case "s":
-		suit = Spades
-	default:
-		return Card{}, fmt.Errorf("invalid suit: %q", suitChar)
-	}
-
-	return Card{Rank: rank, Suit: suit}, nil
-}
