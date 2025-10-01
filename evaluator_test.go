@@ -1066,3 +1066,191 @@ func TestDetectFlush(t *testing.T) {
 		})
 	}
 }
+
+// TestDetectThreeOfAKind_TrueForQueensWithAceKing tests detection of three queens
+// with ace and king kickers, verifying tiebreakers are in correct order.
+func TestDetectThreeOfAKind_TrueForQueensWithAceKing(t *testing.T) {
+	// Arrange: Create Qh-Qd-Qc-Ah-Kd (three queens, ace-king kickers)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectThreeOfAKind(%v) = false, want true", cards)
+	}
+	expectedTiebreakers := []Rank{Queen, Ace, King}
+	if !reflect.DeepEqual(tiebreakers, expectedTiebreakers) {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want %v", cards, tiebreakers, expectedTiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_TrueForThreesWithDifferentKickers tests detection of three threes
+// with seven and five kickers, verifying kickers are sorted descending.
+func TestDetectThreeOfAKind_TrueForThreesWithDifferentKickers(t *testing.T) {
+	// Arrange: Create 3h-3d-3c-7h-5d (three threes, 7-5 kickers)
+	cards := []Card{
+		{Rank: Three, Suit: Hearts},
+		{Rank: Three, Suit: Diamonds},
+		{Rank: Three, Suit: Clubs},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Five, Suit: Diamonds},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectThreeOfAKind(%v) = false, want true", cards)
+	}
+	expectedTiebreakers := []Rank{Three, Seven, Five}
+	if !reflect.DeepEqual(tiebreakers, expectedTiebreakers) {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want %v", cards, tiebreakers, expectedTiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_FalseForFullHouse tests that full house is NOT detected as three of a kind.
+// Full houses should be detected separately (three of a kind + pair).
+func TestDetectThreeOfAKind_FalseForFullHouse(t *testing.T) {
+	// Arrange: Create 8h-8d-8c-5h-5d (full house: eights over fives)
+	cards := []Card{
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Eight, Suit: Clubs},
+		{Rank: Five, Suit: Hearts},
+		{Rank: Five, Suit: Diamonds},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectThreeOfAKind(%v) = true, want false (full house, not trips)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_FalseForTwoPair tests that two pair is NOT detected as three of a kind.
+func TestDetectThreeOfAKind_FalseForTwoPair(t *testing.T) {
+	// Arrange: Create Kh-Kd-9h-9d-3c (two pair: kings and nines)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Nine, Suit: Diamonds},
+		{Rank: Three, Suit: Clubs},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectThreeOfAKind(%v) = true, want false (two pair, not trips)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_FalseForOnePair tests that one pair is NOT detected as three of a kind.
+func TestDetectThreeOfAKind_FalseForOnePair(t *testing.T) {
+	// Arrange: Create Jh-Jd-9h-7d-3c (one pair: jacks)
+	cards := []Card{
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds},
+		{Rank: Three, Suit: Clubs},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectThreeOfAKind(%v) = true, want false (one pair, not trips)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_FalseForHighCard tests that high card is NOT detected as three of a kind.
+func TestDetectThreeOfAKind_FalseForHighCard(t *testing.T) {
+	// Arrange: Create Ah-Kd-Qh-Jd-9c (high card)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Nine, Suit: Clubs},
+	}
+
+	// Act
+	result, tiebreakers := detectThreeOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectThreeOfAKind(%v) = true, want false (high card, not trips)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectThreeOfAKind_FalseForWrongNumberOfCards tests edge case with non-5 cards.
+func TestDetectThreeOfAKind_FalseForWrongNumberOfCards(t *testing.T) {
+	tests := []struct {
+		name  string
+		cards []Card
+	}{
+		{
+			name:  "empty slice",
+			cards: []Card{},
+		},
+		{
+			name: "3 cards",
+			cards: []Card{
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Seven, Suit: Diamonds},
+				{Rank: Seven, Suit: Clubs},
+			},
+		},
+		{
+			name: "7 cards",
+			cards: []Card{
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Nine, Suit: Diamonds},
+				{Rank: Nine, Suit: Clubs},
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Diamonds},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: Jack, Suit: Diamonds},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, tiebreakers := detectThreeOfAKind(tt.cards)
+			if result {
+				t.Errorf("detectThreeOfAKind(%v) = true, want false (wrong number of cards)", tt.cards)
+			}
+			if len(tiebreakers) != 0 {
+				t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", tt.cards, tiebreakers)
+			}
+		})
+	}
+}

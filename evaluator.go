@@ -204,3 +204,39 @@ func detectStraight(cards []Card) (bool, Rank) {
 	// Use isStraight helper to check for sequential ranks
 	return isStraight(cards)
 }
+
+// detectThreeOfAKind checks if the given 5 cards contain three of a kind.
+// Returns true and tiebreakers [trip rank, kicker1, kicker2] if three of a kind is found.
+// Returns false and empty slice if no three of a kind exists.
+// Full houses (three of a kind + pair) return false as they should be detected separately.
+func detectThreeOfAKind(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, []Rank{}
+	}
+
+	counts := rankCounts(cards)
+
+	var tripRank Rank
+	var kickers []Rank
+
+	// Find the rank that appears exactly 3 times
+	for rank, count := range counts {
+		if count == 3 {
+			tripRank = rank
+		} else if count == 1 {
+			kickers = append(kickers, rank)
+		}
+	}
+
+	// Must have exactly one trip and exactly two kickers (excludes full houses)
+	if tripRank != 0 && len(kickers) == 2 {
+		// Sort kickers in descending order
+		if kickers[0] < kickers[1] {
+			kickers[0], kickers[1] = kickers[1], kickers[0]
+		}
+
+		return true, []Rank{tripRank, kickers[0], kickers[1]}
+	}
+
+	return false, []Rank{}
+}
