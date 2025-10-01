@@ -287,3 +287,179 @@ func TestIsStraightAlmostWheel(t *testing.T) {
 		t.Error("Expected false for A-2-3-4-6 (missing 5), got true")
 	}
 }
+
+// Test rankCounts returns map with counts for all unique ranks
+func TestRankCountsAllUnique(t *testing.T) {
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Jack, Suit: Spades},
+		{Rank: Ten, Suit: Hearts},
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have exactly 5 entries (all unique)
+	if len(counts) != 5 {
+		t.Errorf("Expected 5 entries, got %d", len(counts))
+	}
+
+	// Each rank should appear exactly once
+	expectedCounts := map[Rank]int{
+		Ace:   1,
+		King:  1,
+		Queen: 1,
+		Jack:  1,
+		Ten:   1,
+	}
+
+	for rank, expectedCount := range expectedCounts {
+		if counts[rank] != expectedCount {
+			t.Errorf("Rank %v: expected count %d, got %d", rank, expectedCount, counts[rank])
+		}
+	}
+}
+
+// Test rankCounts correctly identifies a pair (count=2)
+func TestRankCountsPair(t *testing.T) {
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds}, // Pair of Aces
+		{Rank: King, Suit: Clubs},
+		{Rank: Queen, Suit: Spades},
+		{Rank: Jack, Suit: Hearts},
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have 4 entries (one pair, three singletons)
+	if len(counts) != 4 {
+		t.Errorf("Expected 4 entries, got %d", len(counts))
+	}
+
+	// Ace should have count of 2
+	if counts[Ace] != 2 {
+		t.Errorf("Expected Ace count 2, got %d", counts[Ace])
+	}
+
+	// Other ranks should have count of 1
+	if counts[King] != 1 || counts[Queen] != 1 || counts[Jack] != 1 {
+		t.Error("Expected other ranks to have count 1")
+	}
+}
+
+// Test rankCounts correctly identifies two pairs
+func TestRankCountsTwoPairs(t *testing.T) {
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds}, // Pair of Aces
+		{Rank: King, Suit: Clubs},
+		{Rank: King, Suit: Spades}, // Pair of Kings
+		{Rank: Queen, Suit: Hearts},
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have 3 entries (two pairs, one singleton)
+	if len(counts) != 3 {
+		t.Errorf("Expected 3 entries, got %d", len(counts))
+	}
+
+	// Aces and Kings should have count of 2
+	if counts[Ace] != 2 {
+		t.Errorf("Expected Ace count 2, got %d", counts[Ace])
+	}
+	if counts[King] != 2 {
+		t.Errorf("Expected King count 2, got %d", counts[King])
+	}
+
+	// Queen should have count of 1
+	if counts[Queen] != 1 {
+		t.Errorf("Expected Queen count 1, got %d", counts[Queen])
+	}
+}
+
+// Test rankCounts correctly identifies trips (count=3)
+func TestRankCountsTrips(t *testing.T) {
+	cards := []Card{
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds}, // Trip Sevens
+		{Rank: Seven, Suit: Clubs},
+		{Rank: King, Suit: Spades},
+		{Rank: Queen, Suit: Hearts},
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have 3 entries (one trip, two singletons)
+	if len(counts) != 3 {
+		t.Errorf("Expected 3 entries, got %d", len(counts))
+	}
+
+	// Seven should have count of 3
+	if counts[Seven] != 3 {
+		t.Errorf("Expected Seven count 3, got %d", counts[Seven])
+	}
+
+	// Other ranks should have count of 1
+	if counts[King] != 1 || counts[Queen] != 1 {
+		t.Error("Expected other ranks to have count 1")
+	}
+}
+
+// Test rankCounts correctly identifies full house (trips + pair)
+func TestRankCountsFullHouse(t *testing.T) {
+	cards := []Card{
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds}, // Trip Sevens
+		{Rank: Seven, Suit: Clubs},
+		{Rank: King, Suit: Spades}, // Pair of Kings
+		{Rank: King, Suit: Hearts},
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have 2 entries (one trip, one pair)
+	if len(counts) != 2 {
+		t.Errorf("Expected 2 entries, got %d", len(counts))
+	}
+
+	// Seven should have count of 3
+	if counts[Seven] != 3 {
+		t.Errorf("Expected Seven count 3, got %d", counts[Seven])
+	}
+
+	// King should have count of 2
+	if counts[King] != 2 {
+		t.Errorf("Expected King count 2, got %d", counts[King])
+	}
+}
+
+// Test rankCounts correctly identifies quads (count=4)
+func TestRankCountsQuads(t *testing.T) {
+	cards := []Card{
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Nine, Suit: Diamonds}, // Quad Nines
+		{Rank: Nine, Suit: Clubs},
+		{Rank: Nine, Suit: Spades},
+		{Rank: Ace, Suit: Hearts}, // Kicker
+	}
+
+	counts := rankCounts(cards)
+
+	// Should have 2 entries (one quad, one singleton)
+	if len(counts) != 2 {
+		t.Errorf("Expected 2 entries, got %d", len(counts))
+	}
+
+	// Nine should have count of 4
+	if counts[Nine] != 4 {
+		t.Errorf("Expected Nine count 4, got %d", counts[Nine])
+	}
+
+	// Ace should have count of 1
+	if counts[Ace] != 1 {
+		t.Errorf("Expected Ace count 1, got %d", counts[Ace])
+	}
+}

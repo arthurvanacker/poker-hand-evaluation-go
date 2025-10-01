@@ -60,3 +60,16 @@ func isStraight(cards []Card) (bool, Rank) {
 	// Regular straight found, highest rank is first element
 	return true, ranks[0]
 }
+
+// rankCounts counts how many cards of each rank exist in the hand.
+// Returns a map where keys are Rank values and values are occurrence counts.
+// Used for detecting pairs, trips, quads, and full houses.
+func rankCounts(cards []Card) map[Rank]int {
+	counts := make(map[Rank]int)
+
+	for _, card := range cards {
+		counts[card.Rank]++
+	}
+
+	return counts
+}
