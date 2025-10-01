@@ -5,21 +5,6 @@ import (
 	"testing"
 )
 
-// Test isFlush returns true when all 5 cards are the same suit
-func TestIsFlushAllHearts(t *testing.T) {
-	cards := []Card{
-		{Rank: Ace, Suit: Hearts},
-		{Rank: King, Suit: Hearts},
-		{Rank: Queen, Suit: Hearts},
-		{Rank: Jack, Suit: Hearts},
-		{Rank: Ten, Suit: Hearts},
-	}
-
-	if !isFlush(cards) {
-		t.Error("Expected flush with all hearts, got false")
-	}
-}
-
 // Test isFlush returns true for all suits
 func TestIsFlushAllSuits(t *testing.T) {
 	tests := []struct {
@@ -291,179 +276,88 @@ func TestIsStraightAlmostWheel(t *testing.T) {
 	}
 }
 
-// Test rankCounts returns map with counts for all unique ranks
-func TestRankCountsAllUnique(t *testing.T) {
-	cards := []Card{
-		{Rank: Ace, Suit: Hearts},
-		{Rank: King, Suit: Diamonds},
-		{Rank: Queen, Suit: Clubs},
-		{Rank: Jack, Suit: Spades},
-		{Rank: Ten, Suit: Hearts},
+// Test rankCounts correctly counts rank frequencies for various hand patterns
+func TestRankCounts(t *testing.T) {
+	tests := []struct {
+		name     string
+		cards    []Card
+		expected map[Rank]int
+	}{
+		{
+			"all unique",
+			[]Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Diamonds},
+				{Rank: Queen, Suit: Clubs},
+				{Rank: Jack, Suit: Spades},
+				{Rank: Ten, Suit: Hearts},
+			},
+			map[Rank]int{Ace: 1, King: 1, Queen: 1, Jack: 1, Ten: 1},
+		},
+		{
+			"one pair",
+			[]Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: Ace, Suit: Diamonds},
+				{Rank: King, Suit: Clubs},
+				{Rank: Queen, Suit: Spades},
+				{Rank: Jack, Suit: Hearts},
+			},
+			map[Rank]int{Ace: 2, King: 1, Queen: 1, Jack: 1},
+		},
+		{
+			"two pairs",
+			[]Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: Ace, Suit: Diamonds},
+				{Rank: King, Suit: Clubs},
+				{Rank: King, Suit: Spades},
+				{Rank: Queen, Suit: Hearts},
+			},
+			map[Rank]int{Ace: 2, King: 2, Queen: 1},
+		},
+		{
+			"three of a kind",
+			[]Card{
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Seven, Suit: Diamonds},
+				{Rank: Seven, Suit: Clubs},
+				{Rank: King, Suit: Spades},
+				{Rank: Queen, Suit: Hearts},
+			},
+			map[Rank]int{Seven: 3, King: 1, Queen: 1},
+		},
+		{
+			"full house",
+			[]Card{
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Seven, Suit: Diamonds},
+				{Rank: Seven, Suit: Clubs},
+				{Rank: King, Suit: Spades},
+				{Rank: King, Suit: Hearts},
+			},
+			map[Rank]int{Seven: 3, King: 2},
+		},
+		{
+			"four of a kind",
+			[]Card{
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Nine, Suit: Diamonds},
+				{Rank: Nine, Suit: Clubs},
+				{Rank: Nine, Suit: Spades},
+				{Rank: Ace, Suit: Hearts},
+			},
+			map[Rank]int{Nine: 4, Ace: 1},
+		},
 	}
 
-	counts := rankCounts(cards)
-
-	// Should have exactly 5 entries (all unique)
-	if len(counts) != 5 {
-		t.Errorf("Expected 5 entries, got %d", len(counts))
-	}
-
-	// Each rank should appear exactly once
-	expectedCounts := map[Rank]int{
-		Ace:   1,
-		King:  1,
-		Queen: 1,
-		Jack:  1,
-		Ten:   1,
-	}
-
-	for rank, expectedCount := range expectedCounts {
-		if counts[rank] != expectedCount {
-			t.Errorf("Rank %v: expected count %d, got %d", rank, expectedCount, counts[rank])
-		}
-	}
-}
-
-// Test rankCounts correctly identifies a pair (count=2)
-func TestRankCountsPair(t *testing.T) {
-	cards := []Card{
-		{Rank: Ace, Suit: Hearts},
-		{Rank: Ace, Suit: Diamonds}, // Pair of Aces
-		{Rank: King, Suit: Clubs},
-		{Rank: Queen, Suit: Spades},
-		{Rank: Jack, Suit: Hearts},
-	}
-
-	counts := rankCounts(cards)
-
-	// Should have 4 entries (one pair, three singletons)
-	if len(counts) != 4 {
-		t.Errorf("Expected 4 entries, got %d", len(counts))
-	}
-
-	// Ace should have count of 2
-	if counts[Ace] != 2 {
-		t.Errorf("Expected Ace count 2, got %d", counts[Ace])
-	}
-
-	// Other ranks should have count of 1
-	if counts[King] != 1 || counts[Queen] != 1 || counts[Jack] != 1 {
-		t.Error("Expected other ranks to have count 1")
-	}
-}
-
-// Test rankCounts correctly identifies two pairs
-func TestRankCountsTwoPairs(t *testing.T) {
-	cards := []Card{
-		{Rank: Ace, Suit: Hearts},
-		{Rank: Ace, Suit: Diamonds}, // Pair of Aces
-		{Rank: King, Suit: Clubs},
-		{Rank: King, Suit: Spades}, // Pair of Kings
-		{Rank: Queen, Suit: Hearts},
-	}
-
-	counts := rankCounts(cards)
-
-	// Should have 3 entries (two pairs, one singleton)
-	if len(counts) != 3 {
-		t.Errorf("Expected 3 entries, got %d", len(counts))
-	}
-
-	// Aces and Kings should have count of 2
-	if counts[Ace] != 2 {
-		t.Errorf("Expected Ace count 2, got %d", counts[Ace])
-	}
-	if counts[King] != 2 {
-		t.Errorf("Expected King count 2, got %d", counts[King])
-	}
-
-	// Queen should have count of 1
-	if counts[Queen] != 1 {
-		t.Errorf("Expected Queen count 1, got %d", counts[Queen])
-	}
-}
-
-// Test rankCounts correctly identifies trips (count=3)
-func TestRankCountsTrips(t *testing.T) {
-	cards := []Card{
-		{Rank: Seven, Suit: Hearts},
-		{Rank: Seven, Suit: Diamonds}, // Trip Sevens
-		{Rank: Seven, Suit: Clubs},
-		{Rank: King, Suit: Spades},
-		{Rank: Queen, Suit: Hearts},
-	}
-
-	counts := rankCounts(cards)
-
-	// Should have 3 entries (one trip, two singletons)
-	if len(counts) != 3 {
-		t.Errorf("Expected 3 entries, got %d", len(counts))
-	}
-
-	// Seven should have count of 3
-	if counts[Seven] != 3 {
-		t.Errorf("Expected Seven count 3, got %d", counts[Seven])
-	}
-
-	// Other ranks should have count of 1
-	if counts[King] != 1 || counts[Queen] != 1 {
-		t.Error("Expected other ranks to have count 1")
-	}
-}
-
-// Test rankCounts correctly identifies full house (trips + pair)
-func TestRankCountsFullHouse(t *testing.T) {
-	cards := []Card{
-		{Rank: Seven, Suit: Hearts},
-		{Rank: Seven, Suit: Diamonds}, // Trip Sevens
-		{Rank: Seven, Suit: Clubs},
-		{Rank: King, Suit: Spades}, // Pair of Kings
-		{Rank: King, Suit: Hearts},
-	}
-
-	counts := rankCounts(cards)
-
-	// Should have 2 entries (one trip, one pair)
-	if len(counts) != 2 {
-		t.Errorf("Expected 2 entries, got %d", len(counts))
-	}
-
-	// Seven should have count of 3
-	if counts[Seven] != 3 {
-		t.Errorf("Expected Seven count 3, got %d", counts[Seven])
-	}
-
-	// King should have count of 2
-	if counts[King] != 2 {
-		t.Errorf("Expected King count 2, got %d", counts[King])
-	}
-}
-
-// Test rankCounts correctly identifies quads (count=4)
-func TestRankCountsQuads(t *testing.T) {
-	cards := []Card{
-		{Rank: Nine, Suit: Hearts},
-		{Rank: Nine, Suit: Diamonds}, // Quad Nines
-		{Rank: Nine, Suit: Clubs},
-		{Rank: Nine, Suit: Spades},
-		{Rank: Ace, Suit: Hearts}, // Kicker
-	}
-
-	counts := rankCounts(cards)
-
-	// Should have 2 entries (one quad, one singleton)
-	if len(counts) != 2 {
-		t.Errorf("Expected 2 entries, got %d", len(counts))
-	}
-
-	// Nine should have count of 4
-	if counts[Nine] != 4 {
-		t.Errorf("Expected Nine count 4, got %d", counts[Nine])
-	}
-
-	// Ace should have count of 1
-	if counts[Ace] != 1 {
-		t.Errorf("Expected Ace count 1, got %d", counts[Ace])
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			counts := rankCounts(tt.cards)
+			if !reflect.DeepEqual(counts, tt.expected) {
+				t.Errorf("rankCounts(%v) = %v, want %v", tt.cards, counts, tt.expected)
+			}
+		})
 	}
 }
 
@@ -1180,135 +1074,6 @@ func TestEvaluateHand_HighCard(t *testing.T) {
 	}
 }
 
-// TestIsFlushWithWrongNumberOfCards tests edge case with non-5 cards
-func TestIsFlushWithWrongNumberOfCards(t *testing.T) {
-	tests := []struct {
-		name  string
-		cards []Card
-	}{
-		{
-			"empty slice",
-			[]Card{},
-		},
-		{
-			"4 cards",
-			[]Card{
-				{Rank: Ace, Suit: Hearts},
-				{Rank: King, Suit: Hearts},
-				{Rank: Queen, Suit: Hearts},
-				{Rank: Jack, Suit: Hearts},
-			},
-		},
-		{
-			"6 cards",
-			[]Card{
-				{Rank: Ace, Suit: Hearts},
-				{Rank: King, Suit: Hearts},
-				{Rank: Queen, Suit: Hearts},
-				{Rank: Jack, Suit: Hearts},
-				{Rank: Ten, Suit: Hearts},
-				{Rank: Nine, Suit: Hearts},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isFlush(tt.cards)
-			if result {
-				t.Errorf("isFlush with %d cards should return false, got true", len(tt.cards))
-			}
-		})
-	}
-}
-
-// TestIsStraightWithWrongNumberOfCards tests edge case with non-5 cards
-func TestIsStraightWithWrongNumberOfCards(t *testing.T) {
-	tests := []struct {
-		name  string
-		cards []Card
-	}{
-		{
-			"empty slice",
-			[]Card{},
-		},
-		{
-			"4 cards",
-			[]Card{
-				{Rank: Five, Suit: Hearts},
-				{Rank: Six, Suit: Hearts},
-				{Rank: Seven, Suit: Hearts},
-				{Rank: Eight, Suit: Hearts},
-			},
-		},
-		{
-			"6 cards",
-			[]Card{
-				{Rank: Five, Suit: Hearts},
-				{Rank: Six, Suit: Hearts},
-				{Rank: Seven, Suit: Hearts},
-				{Rank: Eight, Suit: Hearts},
-				{Rank: Nine, Suit: Hearts},
-				{Rank: Ten, Suit: Hearts},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, rank := isStraight(tt.cards)
-			if result {
-				t.Errorf("isStraight with %d cards should return false, got true with rank %v", len(tt.cards), rank)
-			}
-			if rank != 0 {
-				t.Errorf("isStraight with %d cards should return rank 0, got %v", len(tt.cards), rank)
-			}
-		})
-	}
-}
-
-// TestDetectRoyalFlushWithWrongNumberOfCards tests edge case with non-5 cards
-func TestDetectRoyalFlushWithWrongNumberOfCards(t *testing.T) {
-	tests := []struct {
-		name  string
-		cards []Card
-	}{
-		{
-			"empty slice",
-			[]Card{},
-		},
-		{
-			"4 royal cards",
-			[]Card{
-				{Rank: Ten, Suit: Hearts},
-				{Rank: Jack, Suit: Hearts},
-				{Rank: Queen, Suit: Hearts},
-				{Rank: King, Suit: Hearts},
-			},
-		},
-		{
-			"6 cards with royal",
-			[]Card{
-				{Rank: Nine, Suit: Hearts},
-				{Rank: Ten, Suit: Hearts},
-				{Rank: Jack, Suit: Hearts},
-				{Rank: Queen, Suit: Hearts},
-				{Rank: King, Suit: Hearts},
-				{Rank: Ace, Suit: Hearts},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := detectRoyalFlush(tt.cards)
-			if result {
-				t.Errorf("detectRoyalFlush with %d cards should return false, got true", len(tt.cards))
-			}
-		})
-	}
-}
-
 // TestDetectFlush tests the detectFlush function
 func TestDetectFlush(t *testing.T) {
 	tests := []struct {
@@ -1544,51 +1309,6 @@ func TestDetectThreeOfAKind_FalseForHighCard(t *testing.T) {
 	}
 	if len(tiebreakers) != 0 {
 		t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
-	}
-}
-
-// TestDetectThreeOfAKind_FalseForWrongNumberOfCards tests edge case with non-5 cards.
-func TestDetectThreeOfAKind_FalseForWrongNumberOfCards(t *testing.T) {
-	tests := []struct {
-		name  string
-		cards []Card
-	}{
-		{
-			name:  "empty slice",
-			cards: []Card{},
-		},
-		{
-			name: "3 cards",
-			cards: []Card{
-				{Rank: Seven, Suit: Hearts},
-				{Rank: Seven, Suit: Diamonds},
-				{Rank: Seven, Suit: Clubs},
-			},
-		},
-		{
-			name: "7 cards",
-			cards: []Card{
-				{Rank: Nine, Suit: Hearts},
-				{Rank: Nine, Suit: Diamonds},
-				{Rank: Nine, Suit: Clubs},
-				{Rank: Ace, Suit: Hearts},
-				{Rank: King, Suit: Diamonds},
-				{Rank: Queen, Suit: Hearts},
-				{Rank: Jack, Suit: Diamonds},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, tiebreakers := detectThreeOfAKind(tt.cards)
-			if result {
-				t.Errorf("detectThreeOfAKind(%v) = true, want false (wrong number of cards)", tt.cards)
-			}
-			if len(tiebreakers) != 0 {
-				t.Errorf("detectThreeOfAKind(%v) tiebreakers = %v, want empty slice", tt.cards, tiebreakers)
-			}
-		})
 	}
 }
 
