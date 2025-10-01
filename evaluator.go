@@ -128,3 +128,33 @@ func detectStraightFlush(cards []Card) (bool, Rank) {
 	// Both conditions met: it's a straight flush
 	return true, highCard
 }
+
+// detectFourOfAKind checks if the given 5 cards contain four of a kind.
+// Returns true and tiebreakers [quad rank, kicker] if four of a kind is found.
+// Returns false and empty slice if no four of a kind exists.
+func detectFourOfAKind(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, []Rank{}
+	}
+
+	counts := rankCounts(cards)
+
+	var quadRank Rank
+	var kicker Rank
+
+	// Find the rank that appears 4 times
+	for rank, count := range counts {
+		if count == 4 {
+			quadRank = rank
+		} else if count == 1 {
+			kicker = rank
+		}
+	}
+
+	// If we found a quad rank, we have four of a kind
+	if quadRank != 0 {
+		return true, []Rank{quadRank, kicker}
+	}
+
+	return false, []Rank{}
+}

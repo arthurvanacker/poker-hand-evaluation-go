@@ -670,6 +670,86 @@ func TestDetectStraightFlush_FalseForNonStraightFlush(t *testing.T) {
 	}
 }
 
+// TestDetectFourOfAKind_TrueForQuads verifies that detectFourOfAKind returns true
+// and correct tiebreakers for 8-8-8-8-K.
+func TestDetectFourOfAKind_TrueForQuads(t *testing.T) {
+	// Arrange: Create 8h-8d-8c-8s-Kh (four eights with king kicker)
+	cards := []Card{
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Eight, Suit: Clubs},
+		{Rank: Eight, Suit: Spades},
+		{Rank: King, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectFourOfAKind(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectFourOfAKind(%v) = false, want true", cards)
+	}
+	if len(tiebreakers) != 2 {
+		t.Errorf("detectFourOfAKind(%v) tiebreakers length = %d, want 2", cards, len(tiebreakers))
+	}
+	if len(tiebreakers) >= 2 {
+		if tiebreakers[0] != Eight {
+			t.Errorf("detectFourOfAKind(%v) quad rank = %v, want %v", cards, tiebreakers[0], Eight)
+		}
+		if tiebreakers[1] != King {
+			t.Errorf("detectFourOfAKind(%v) kicker = %v, want %v", cards, tiebreakers[1], King)
+		}
+	}
+}
+
+// TestDetectFourOfAKind_FalseForFullHouse verifies that detectFourOfAKind returns false
+// for a full house (three of a kind plus a pair).
+func TestDetectFourOfAKind_FalseForFullHouse(t *testing.T) {
+	// Arrange: Create Kh-Kd-Kc-7s-7h (kings full of sevens)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: King, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Seven, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectFourOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectFourOfAKind(%v) = true, want false (full house, not quads)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectFourOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectFourOfAKind_FalseForTrips verifies that detectFourOfAKind returns false
+// for three of a kind.
+func TestDetectFourOfAKind_FalseForTrips(t *testing.T) {
+	// Arrange: Create Qh-Qd-Qc-9s-3h (three queens)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Nine, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectFourOfAKind(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectFourOfAKind(%v) = true, want false (trips, not quads)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectFourOfAKind(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
 // TestIsFlushWithWrongNumberOfCards tests edge case with non-5 cards
 func TestIsFlushWithWrongNumberOfCards(t *testing.T) {
 	tests := []struct {
