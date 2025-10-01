@@ -2,6 +2,8 @@
 // that identifies the best 5-card hand from 5, 6, or 7 cards.
 package main
 
+import "sort"
+
 // isFlush checks if all 5 cards are the same suit.
 // Returns true if all cards share the same suit, false otherwise.
 func isFlush(cards []Card) bool {
@@ -157,4 +159,30 @@ func detectFourOfAKind(cards []Card) (bool, []Rank) {
 	}
 
 	return false, []Rank{}
+}
+
+// detectFlush detects a flush (5 suited cards, not sequential)
+// Returns true and ranks in descending order if flush, false and nil otherwise
+// Returns false for straight flushes (they are handled separately)
+func detectFlush(cards []Card) (bool, []Rank) {
+	// Must be a flush
+	if !isFlush(cards) {
+		return false, nil
+	}
+
+	// Must NOT be a straight (to exclude straight flushes)
+	if isStraight, _ := isStraight(cards); isStraight {
+		return false, nil
+	}
+
+	// Extract ranks and sort in descending order
+	ranks := make([]Rank, len(cards))
+	for i, card := range cards {
+		ranks[i] = card.Rank
+	}
+	sort.Slice(ranks, func(i, j int) bool {
+		return ranks[i] > ranks[j]
+	})
+
+	return true, ranks
 }

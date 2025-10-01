@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // Test isFlush returns true when all 5 cards are the same suit
 func TestIsFlushAllHearts(t *testing.T) {
@@ -874,6 +877,101 @@ func TestDetectRoyalFlushWithWrongNumberOfCards(t *testing.T) {
 			result := detectRoyalFlush(tt.cards)
 			if result {
 				t.Errorf("detectRoyalFlush with %d cards should return false, got true", len(tt.cards))
+			}
+		})
+	}
+}
+
+// TestDetectFlush tests the detectFlush function
+func TestDetectFlush(t *testing.T) {
+	tests := []struct {
+		name          string
+		cards         []Card
+		expectedFound bool
+		expectedRanks []Rank
+	}{
+		{
+			name: "flush with A-K-9-6-2 all hearts",
+			cards: []Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Hearts},
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Six, Suit: Hearts},
+				{Rank: Two, Suit: Hearts},
+			},
+			expectedFound: true,
+			expectedRanks: []Rank{Ace, King, Nine, Six, Two}, // descending order
+		},
+		{
+			name: "not a flush - mixed suits",
+			cards: []Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Diamonds},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+				{Rank: Ten, Suit: Hearts},
+			},
+			expectedFound: false,
+			expectedRanks: nil,
+		},
+		{
+			name: "straight flush - should return false",
+			cards: []Card{
+				{Rank: Ten, Suit: Hearts},
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Eight, Suit: Hearts},
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Six, Suit: Hearts},
+			},
+			expectedFound: false,
+			expectedRanks: nil,
+		},
+		{
+			name: "royal flush - should return false",
+			cards: []Card{
+				{Rank: Ace, Suit: Spades},
+				{Rank: King, Suit: Spades},
+				{Rank: Queen, Suit: Spades},
+				{Rank: Jack, Suit: Spades},
+				{Rank: Ten, Suit: Spades},
+			},
+			expectedFound: false,
+			expectedRanks: nil,
+		},
+		{
+			name: "flush with different suits - clubs",
+			cards: []Card{
+				{Rank: Queen, Suit: Clubs},
+				{Rank: Ten, Suit: Clubs},
+				{Rank: Eight, Suit: Clubs},
+				{Rank: Five, Suit: Clubs},
+				{Rank: Three, Suit: Clubs},
+			},
+			expectedFound: true,
+			expectedRanks: []Rank{Queen, Ten, Eight, Five, Three},
+		},
+		{
+			name: "not a flush - four same suit",
+			cards: []Card{
+				{Rank: Ace, Suit: Diamonds},
+				{Rank: King, Suit: Diamonds},
+				{Rank: Queen, Suit: Diamonds},
+				{Rank: Jack, Suit: Diamonds},
+				{Rank: Ten, Suit: Spades},
+			},
+			expectedFound: false,
+			expectedRanks: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			found, ranks := detectFlush(tt.cards)
+			if found != tt.expectedFound {
+				t.Errorf("detectFlush() found = %v, want %v", found, tt.expectedFound)
+			}
+			if !reflect.DeepEqual(ranks, tt.expectedRanks) {
+				t.Errorf("detectFlush() ranks = %v, want %v", ranks, tt.expectedRanks)
 			}
 		})
 	}
