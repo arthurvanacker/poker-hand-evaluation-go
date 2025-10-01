@@ -1068,10 +1068,27 @@ BenchmarkCombinations-12          	  337502	      3407 ns/op	    6888 B/op	     
    - Most allocations come from combination generation (67) and evaluation (9 per combo)
 
 6. **Phase 06 Optimization Impact** (Insertion Sort):
-   - **Before**: 1,017 ns/op for EvaluateHand
-   - **After**: 747 ns/op for EvaluateHand
-   - **Improvement**: 29% faster, zero memory overhead
-   - Achieved by replacing `sort.Slice` with custom insertion sort (eliminates reflection overhead)
+
+   **Before Optimization** (Baseline with sort.Slice):
+   ```
+   BenchmarkEvaluateHand-12          	 1000000	      1017 ns/op	     216 B/op	       9 allocs/op
+   BenchmarkFindBestHand5Cards-12    	 1904784	       633 ns/op	     168 B/op	       4 allocs/op
+   BenchmarkFindBestHand7Cards-12    	   51800	     22949 ns/op	   11208 B/op	     229 allocs/op
+   ```
+
+   **After Optimization** (Insertion Sort):
+   ```
+   BenchmarkEvaluateHand-12          	 1581703	       747 ns/op	     216 B/op	       9 allocs/op
+   BenchmarkFindBestHand5Cards-12    	 2633970	       455 ns/op	     112 B/op	       2 allocs/op
+   BenchmarkFindBestHand7Cards-12    	   64371	     18778 ns/op	   11208 B/op	     229 allocs/op
+   ```
+
+   **Improvements**:
+   - **EvaluateHand**: 1,017 ns → 747 ns (**26.5% faster**)
+   - **FindBestHand5Cards**: 633 ns → 455 ns (**28.1% faster**)
+   - **FindBestHand7Cards**: 22,949 ns → 18,778 ns (**18.2% faster**)
+   - **Memory**: Zero overhead (same allocations and bytes)
+   - **Technique**: Replaced `sort.Slice` with custom insertion sort (eliminates reflection overhead)
 
 **Performance is "Excellent":**
 - For interactive applications (poker games, hand analyzers): **excellent performance**
