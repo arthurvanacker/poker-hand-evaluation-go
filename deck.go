@@ -1,6 +1,6 @@
+// Package main implements a Texas Hold'em poker hand evaluator
+// that identifies the best 5-card hand from 5, 6, or 7 cards.
 package main
-
-import "math/rand"
 
 // Deck represents a collection of playing cards
 type Deck struct {
@@ -24,13 +24,4 @@ func NewDeck() *Deck {
 	}
 
 	return deck
-}
-
-// Shuffle randomizes the order of cards in the deck using Fisher-Yates algorithm
-func (d *Deck) Shuffle() {
-	n := len(d.Cards)
-	for i := n - 1; i > 0; i-- {
-		j := rand.Intn(i + 1)
-		d.Cards[i], d.Cards[j] = d.Cards[j], d.Cards[i]
-	}
 }
