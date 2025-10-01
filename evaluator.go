@@ -285,3 +285,52 @@ func detectTwoPair(cards []Card) (bool, []Rank) {
 	// Return [high pair, low pair, kicker]
 	return true, []Rank{pairs[0], pairs[1], kicker}
 }
+
+// detectOnePair checks if the given 5 cards contain exactly one pair.
+// Returns (true, tiebreakers) if exactly one pair exists, where tiebreakers
+// contains [pair rank, kicker1, kicker2, kicker3] in descending order.
+// Returns (false, nil) if no pair, two pairs, trips, or quads are present.
+func detectOnePair(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, nil
+	}
+
+	counts := rankCounts(cards)
+
+	// Count how many ranks appear exactly twice (pairs)
+	pairCount := 0
+	var pairRank Rank
+	var kickers []Rank
+
+	for rank, count := range counts {
+		if count == 2 {
+			pairCount++
+			pairRank = rank
+		} else if count == 1 {
+			kickers = append(kickers, rank)
+		} else if count > 2 {
+			// Trips or quads detected, not one pair
+			return false, nil
+		}
+	}
+
+	// Must have exactly one pair (not zero, not two)
+	if pairCount != 1 {
+		return false, nil
+	}
+
+	// Sort kickers in descending order
+	for i := 0; i < len(kickers); i++ {
+		for j := i + 1; j < len(kickers); j++ {
+			if kickers[i] < kickers[j] {
+				kickers[i], kickers[j] = kickers[j], kickers[i]
+			}
+		}
+	}
+
+	// Build tiebreakers: [pair rank, kicker1, kicker2, kicker3]
+	tiebreakers := []Rank{pairRank}
+	tiebreakers = append(tiebreakers, kickers...)
+
+	return true, tiebreakers
+}

@@ -1337,3 +1337,78 @@ func TestDetectTwoPair_FalseForOnePair(t *testing.T) {
 		t.Errorf("detectTwoPair(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
 	}
 }
+
+// TestDetectOnePair_TrueForPair verifies that detectOnePair returns true
+// and correct tiebreakers [pair rank, kicker1, kicker2, kicker3] for J-J-9-6-2.
+func TestDetectOnePair_TrueForPair(t *testing.T) {
+	// Arrange: Create J-J-9-6-2 (pair of Jacks)
+	cards := []Card{
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Nine, Suit: Clubs},
+		{Rank: Six, Suit: Spades},
+		{Rank: Two, Suit: Hearts},
+	}
+
+	// Act
+	found, tiebreakers := detectOnePair(cards)
+
+	// Assert
+	if !found {
+		t.Errorf("detectOnePair(%v) = false, want true", cards)
+	}
+
+	// Expected tiebreakers: [Jack (pair rank), Nine, Six, Two] in descending order
+	expectedTiebreakers := []Rank{Jack, Nine, Six, Two}
+	if len(tiebreakers) != len(expectedTiebreakers) {
+		t.Errorf("detectOnePair(%v) tiebreakers length = %d, want %d", cards, len(tiebreakers), len(expectedTiebreakers))
+	}
+
+	for i, expected := range expectedTiebreakers {
+		if tiebreakers[i] != expected {
+			t.Errorf("detectOnePair(%v) tiebreakers[%d] = %v, want %v", cards, i, tiebreakers[i], expected)
+		}
+	}
+}
+
+// TestDetectOnePair_FalseForTwoPair verifies that detectOnePair returns false
+// when the hand contains two pairs (e.g., K-K-5-5-A).
+func TestDetectOnePair_FalseForTwoPair(t *testing.T) {
+	// Arrange: Create K-K-5-5-A (two pairs)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Five, Suit: Clubs},
+		{Rank: Five, Suit: Spades},
+		{Rank: Ace, Suit: Hearts},
+	}
+
+	// Act
+	found, _ := detectOnePair(cards)
+
+	// Assert
+	if found {
+		t.Errorf("detectOnePair(%v) = true, want false (two pair detected)", cards)
+	}
+}
+
+// TestDetectOnePair_FalseForHighCard verifies that detectOnePair returns false
+// when the hand contains no pairs (e.g., A-K-Q-J-9 unsuited).
+func TestDetectOnePair_FalseForHighCard(t *testing.T) {
+	// Arrange: Create A-K-Q-J-9 (high card, no pairs)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Jack, Suit: Spades},
+		{Rank: Nine, Suit: Hearts},
+	}
+
+	// Act
+	found, _ := detectOnePair(cards)
+
+	// Assert
+	if found {
+		t.Errorf("detectOnePair(%v) = true, want false (high card, no pair)", cards)
+	}
+}
