@@ -73,3 +73,38 @@ func rankCounts(cards []Card) map[Rank]int {
 
 	return counts
 }
+
+// detectRoyalFlush checks if the given 5 cards form a royal flush.
+// A royal flush is 10-J-Q-K-A all of the same suit.
+// Returns true if the hand is a royal flush, false otherwise.
+func detectRoyalFlush(cards []Card) bool {
+	if len(cards) != 5 {
+		return false
+	}
+
+	// Check if all cards are the same suit
+	if !isFlush(cards) {
+		return false
+	}
+
+	// Check for the exact ranks: 10, J, Q, K, A (Ten=10, Jack=11, Queen=12, King=13, Ace=14)
+	requiredRanks := map[Rank]bool{
+		Ten:   true,
+		Jack:  true,
+		Queen: true,
+		King:  true,
+		Ace:   true,
+	}
+
+	// Verify all required ranks are present
+	for _, card := range cards {
+		if !requiredRanks[card.Rank] {
+			return false
+		}
+		// Remove the rank to ensure no duplicates
+		delete(requiredRanks, card.Rank)
+	}
+
+	// All required ranks should be consumed (map should be empty)
+	return len(requiredRanks) == 0
+}

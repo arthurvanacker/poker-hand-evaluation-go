@@ -463,3 +463,113 @@ func TestRankCountsQuads(t *testing.T) {
 		t.Errorf("Expected Ace count 1, got %d", counts[Ace])
 	}
 }
+
+// TestDetectRoyalFlush_TrueForRoyalFlush verifies that detectRoyalFlush returns true
+// for a valid royal flush (10-J-Q-K-A all of the same suit).
+func TestDetectRoyalFlush_TrueForRoyalFlush(t *testing.T) {
+	// Arrange: Create a royal flush in hearts (Th-Jh-Qh-Kh-Ah)
+	cards := []Card{
+		{Rank: Ten, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Ace, Suit: Hearts},
+	}
+
+	// Act
+	result := detectRoyalFlush(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectRoyalFlush(%v) = false, want true", cards)
+	}
+}
+
+// TestDetectRoyalFlush_FalseForKingHighStraightFlush verifies that detectRoyalFlush
+// returns false for a king-high straight flush (9-10-J-Q-K suited).
+func TestDetectRoyalFlush_FalseForKingHighStraightFlush(t *testing.T) {
+	// Arrange: Create a king-high straight flush in spades (9s-Ts-Js-Qs-Ks)
+	cards := []Card{
+		{Rank: Nine, Suit: Spades},
+		{Rank: Ten, Suit: Spades},
+		{Rank: Jack, Suit: Spades},
+		{Rank: Queen, Suit: Spades},
+		{Rank: King, Suit: Spades},
+	}
+
+	// Act
+	result := detectRoyalFlush(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectRoyalFlush(%v) = true, want false", cards)
+	}
+}
+
+// TestDetectRoyalFlush_FalseForNonFlushRoyal verifies that detectRoyalFlush
+// returns false for 10-J-Q-K-A that are not all the same suit.
+func TestDetectRoyalFlush_FalseForNonFlushRoyal(t *testing.T) {
+	// Arrange: Create 10-J-Q-K-A with mixed suits
+	cards := []Card{
+		{Rank: Ten, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: King, Suit: Clubs},
+		{Rank: Ace, Suit: Spades},
+	}
+
+	// Act
+	result := detectRoyalFlush(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectRoyalFlush(%v) = true, want false", cards)
+	}
+}
+
+// TestDetectRoyalFlush_TrueForRoyalFlushAllSuits verifies that detectRoyalFlush
+// correctly identifies royal flushes in all four suits.
+func TestDetectRoyalFlush_TrueForRoyalFlushAllSuits(t *testing.T) {
+	suits := []Suit{Hearts, Diamonds, Clubs, Spades}
+	suitNames := []string{"Hearts", "Diamonds", "Clubs", "Spades"}
+
+	for i, suit := range suits {
+		// Arrange: Create a royal flush in the current suit
+		cards := []Card{
+			{Rank: Ten, Suit: suit},
+			{Rank: Jack, Suit: suit},
+			{Rank: Queen, Suit: suit},
+			{Rank: King, Suit: suit},
+			{Rank: Ace, Suit: suit},
+		}
+
+		// Act
+		result := detectRoyalFlush(cards)
+
+		// Assert
+		if !result {
+			t.Errorf("detectRoyalFlush(%v) for %s = false, want true", cards, suitNames[i])
+		}
+	}
+}
+
+// TestDetectRoyalFlush_FalseForRegularFlush verifies that detectRoyalFlush
+// returns false for a flush that is not a royal flush.
+func TestDetectRoyalFlush_FalseForRegularFlush(t *testing.T) {
+	// Arrange: Create a regular flush (2-5-7-9-J of hearts)
+	cards := []Card{
+		{Rank: Two, Suit: Hearts},
+		{Rank: Five, Suit: Hearts},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+	}
+
+	// Act
+	result := detectRoyalFlush(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectRoyalFlush(%v) = true, want false", cards)
+	}
+}
