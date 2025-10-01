@@ -2,6 +2,8 @@
 // that identifies the best 5-card hand from 5, 6, or 7 cards.
 package main
 
+import "fmt"
+
 // HandCategory represents the category of a poker hand, ordered by strength.
 // Higher values indicate stronger hands.
 type HandCategory int
@@ -45,4 +47,31 @@ func (hc HandCategory) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+// Hand represents a poker hand with its cards, category, and tiebreakers.
+// Tiebreakers are ranks in descending order of importance for comparing
+// hands of the same category.
+type Hand struct {
+	Cards       []Card       // The 5 cards in the hand
+	Category    HandCategory // The hand category (Royal Flush, etc.)
+	Tiebreakers []Rank       // Ranks for tiebreaker comparison
+}
+
+// NewHand creates a new Hand from the given cards.
+// Returns an error if the number of cards is not exactly 5.
+func NewHand(cards []Card) (*Hand, error) {
+	if len(cards) != 5 {
+		return nil, fmt.Errorf("hand must contain exactly 5 cards, got %d", len(cards))
+	}
+
+	// Create a copy of the cards slice to avoid external modification
+	cardsCopy := make([]Card, 5)
+	copy(cardsCopy, cards)
+
+	return &Hand{
+		Cards:       cardsCopy,
+		Category:    HighCard, // Default category, will be set by evaluator
+		Tiebreakers: []Rank{}, // Will be populated by evaluator
+	}, nil
 }

@@ -115,3 +115,135 @@ func TestHandCategoryString(t *testing.T) {
 		})
 	}
 }
+
+// Test Hand struct has correct fields
+func TestHandStructFields(t *testing.T) {
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Ten, Suit: Hearts},
+	}
+	tiebreakers := []Rank{Ace, King, Queen, Jack, Ten}
+
+	hand := Hand{
+		Cards:       cards,
+		Category:    RoyalFlush,
+		Tiebreakers: tiebreakers,
+	}
+
+	if len(hand.Cards) != 5 {
+		t.Errorf("Expected 5 cards, got %d", len(hand.Cards))
+	}
+	if hand.Category != RoyalFlush {
+		t.Errorf("Expected RoyalFlush, got %v", hand.Category)
+	}
+	if len(hand.Tiebreakers) != 5 {
+		t.Errorf("Expected 5 tiebreakers, got %d", len(hand.Tiebreakers))
+	}
+}
+
+// Test NewHand with exactly 5 cards succeeds
+func TestNewHandWithFiveCards(t *testing.T) {
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Ten, Suit: Hearts},
+	}
+
+	hand, err := NewHand(cards)
+	if err != nil {
+		t.Errorf("Expected no error with 5 cards, got: %v", err)
+	}
+	if hand == nil {
+		t.Fatal("Expected hand to be non-nil")
+	}
+	if len(hand.Cards) != 5 {
+		t.Errorf("Expected 5 cards, got %d", len(hand.Cards))
+	}
+}
+
+// Test NewHand rejects fewer than 5 cards
+func TestNewHandRejectsTooFewCards(t *testing.T) {
+	tests := []struct {
+		name     string
+		numCards int
+	}{
+		{"zero cards", 0},
+		{"one card", 1},
+		{"two cards", 2},
+		{"three cards", 3},
+		{"four cards", 4},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cards := make([]Card, tt.numCards)
+			for i := 0; i < tt.numCards; i++ {
+				cards[i] = Card{Rank: Ace, Suit: Hearts}
+			}
+
+			hand, err := NewHand(cards)
+			if err == nil {
+				t.Errorf("Expected error with %d cards, got nil", tt.numCards)
+			}
+			if hand != nil {
+				t.Errorf("Expected nil hand with %d cards, got non-nil", tt.numCards)
+			}
+		})
+	}
+}
+
+// Test NewHand rejects more than 5 cards
+func TestNewHandRejectsTooManyCards(t *testing.T) {
+	tests := []struct {
+		name     string
+		numCards int
+	}{
+		{"six cards", 6},
+		{"seven cards", 7},
+		{"ten cards", 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cards := make([]Card, tt.numCards)
+			for i := 0; i < tt.numCards; i++ {
+				cards[i] = Card{Rank: Rank(2 + i%13), Suit: Hearts}
+			}
+
+			hand, err := NewHand(cards)
+			if err == nil {
+				t.Errorf("Expected error with %d cards, got nil", tt.numCards)
+			}
+			if hand != nil {
+				t.Errorf("Expected nil hand with %d cards, got non-nil", tt.numCards)
+			}
+		})
+	}
+}
+
+// Test NewHand preserves card order
+func TestNewHandPreservesCardOrder(t *testing.T) {
+	cards := []Card{
+		{Rank: Two, Suit: Hearts},
+		{Rank: Five, Suit: Diamonds},
+		{Rank: Ace, Suit: Clubs},
+		{Rank: King, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	hand, err := NewHand(cards)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+
+	for i := 0; i < 5; i++ {
+		if hand.Cards[i] != cards[i] {
+			t.Errorf("Card at position %d: expected %v, got %v", i, cards[i], hand.Cards[i])
+		}
+	}
+}
