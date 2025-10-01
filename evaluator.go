@@ -489,3 +489,67 @@ func EvaluateHand(cards []Card) *Hand {
 		Tiebreakers: tiebreakers,
 	}
 }
+
+// CompareHands compares two poker hands and returns:
+// 1 if hand1 is stronger, -1 if hand2 is stronger, 0 if equal.
+// Compares by category first, then by tiebreakers element-by-element.
+func CompareHands(hand1, hand2 *Hand) int {
+	if hand1 == nil || hand2 == nil {
+		return 0
+	}
+
+	// Compare by category first (higher category wins)
+	if hand1.Category > hand2.Category {
+		return 1
+	}
+	if hand1.Category < hand2.Category {
+		return -1
+	}
+
+	// Same category - compare tiebreakers element-by-element
+	minLen := len(hand1.Tiebreakers)
+	if len(hand2.Tiebreakers) < minLen {
+		minLen = len(hand2.Tiebreakers)
+	}
+
+	for i := 0; i < minLen; i++ {
+		if hand1.Tiebreakers[i] > hand2.Tiebreakers[i] {
+			return 1
+		}
+		if hand1.Tiebreakers[i] < hand2.Tiebreakers[i] {
+			return -1
+		}
+	}
+
+	// All tiebreakers equal
+	return 0
+}
+
+// FindBestHand finds the best 5-card poker hand from 5, 6, or 7 cards.
+// Generates all possible 5-card combinations, evaluates each, and returns the strongest.
+// Returns nil if fewer than 5 cards are provided.
+func FindBestHand(cards []Card) *Hand {
+	if len(cards) < 5 {
+		return nil
+	}
+
+	// Optimization: if exactly 5 cards, evaluate directly
+	if len(cards) == 5 {
+		return EvaluateHand(cards)
+	}
+
+	// Generate all 5-card combinations
+	combinations := Combinations(cards, 5)
+
+	var bestHand *Hand
+
+	// Evaluate each combination and keep the best
+	for _, combo := range combinations {
+		hand := EvaluateHand(combo)
+		if bestHand == nil || CompareHands(hand, bestHand) > 0 {
+			bestHand = hand
+		}
+	}
+
+	return bestHand
+}

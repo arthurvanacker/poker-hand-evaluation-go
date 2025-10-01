@@ -1832,3 +1832,139 @@ func TestDetectHighCard_AlwaysReturnsTrue(t *testing.T) {
 		})
 	}
 }
+
+// TestFindBestHand_ReturnsFlushOver7Cards verifies that FindBestHand
+// correctly identifies a flush when given 7 cards containing a flush.
+func TestFindBestHand_ReturnsFlushOver7Cards(t *testing.T) {
+	// Arrange: 7 cards with 5 hearts forming a flush
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+	}
+
+	// Act
+	hand := FindBestHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("FindBestHand returned nil, expected valid hand")
+	}
+	if hand.Category != Flush {
+		t.Errorf("FindBestHand category = %v, want %v", hand.Category, Flush)
+	}
+	if len(hand.Cards) != 5 {
+		t.Errorf("FindBestHand cards length = %d, want 5", len(hand.Cards))
+	}
+}
+
+// TestFindBestHand_ReturnsFlushOverStraight verifies that FindBestHand
+// correctly chooses a flush over a straight when both are possible.
+func TestFindBestHand_ReturnsFlushOverStraight(t *testing.T) {
+	// Arrange: 7 cards containing both a flush and a straight
+	// Flush: Ah-Kh-Qh-Jh-9h (hearts)
+	// Straight: 9-8-7-6-5 (mixed suits)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+	}
+
+	// Act
+	hand := FindBestHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("FindBestHand returned nil, expected valid hand")
+	}
+	if hand.Category != Flush {
+		t.Errorf("FindBestHand category = %v, want %v (flush beats straight)", hand.Category, Flush)
+	}
+}
+
+// TestFindBestHand_HandlesExactly5Cards verifies that FindBestHand
+// works correctly when given exactly 5 cards.
+func TestFindBestHand_HandlesExactly5Cards(t *testing.T) {
+	// Arrange: Exactly 5 cards forming a straight
+	cards := []Card{
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+		{Rank: Six, Suit: Spades},
+		{Rank: Five, Suit: Hearts},
+	}
+
+	// Act
+	hand := FindBestHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("FindBestHand returned nil, expected valid hand")
+	}
+	if hand.Category != Straight {
+		t.Errorf("FindBestHand category = %v, want %v", hand.Category, Straight)
+	}
+	if len(hand.Cards) != 5 {
+		t.Errorf("FindBestHand cards length = %d, want 5", len(hand.Cards))
+	}
+}
+
+// TestFindBestHand_ReturnsStrongestFrom7Cards verifies that FindBestHand
+// evaluates all 21 combinations and returns the strongest hand.
+func TestFindBestHand_ReturnsStrongestFrom7Cards(t *testing.T) {
+	// Arrange: 7 cards with a four of a kind (strongest possible hand)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds},
+		{Rank: Ace, Suit: Clubs},
+		{Rank: Ace, Suit: Spades},
+		{Rank: King, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Jack, Suit: Clubs},
+	}
+
+	// Act
+	hand := FindBestHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("FindBestHand returned nil, expected valid hand")
+	}
+	if hand.Category != FourOfAKind {
+		t.Errorf("FindBestHand category = %v, want %v", hand.Category, FourOfAKind)
+	}
+}
+
+// TestFindBestHand_HandlesHighCard verifies that FindBestHand
+// correctly returns a high card hand when no better hand exists.
+func TestFindBestHand_HandlesHighCard(t *testing.T) {
+	// Arrange: 7 cards with no pairs, straights, or flushes
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Jack, Suit: Spades},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds},
+		{Rank: Five, Suit: Clubs},
+	}
+
+	// Act
+	hand := FindBestHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("FindBestHand returned nil, expected valid hand")
+	}
+	if hand.Category != HighCard {
+		t.Errorf("FindBestHand category = %v, want %v", hand.Category, HighCard)
+	}
+}
