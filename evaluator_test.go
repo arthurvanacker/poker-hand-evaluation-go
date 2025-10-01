@@ -1254,3 +1254,86 @@ func TestDetectThreeOfAKind_FalseForWrongNumberOfCards(t *testing.T) {
 		})
 	}
 }
+
+// TestDetectTwoPair_TrueForTwoPair verifies that detectTwoPair returns true
+// and correct tiebreakers [high pair, low pair, kicker] for A-A-7-7-3.
+func TestDetectTwoPair_TrueForTwoPair(t *testing.T) {
+	// Arrange: Create Ah-Ad-7h-7d-3s (aces and sevens with 3 kicker)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds},
+		{Rank: Three, Suit: Spades},
+	}
+
+	// Act
+	result, tiebreakers := detectTwoPair(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectTwoPair(%v) = false, want true", cards)
+	}
+	if len(tiebreakers) != 3 {
+		t.Errorf("detectTwoPair(%v) tiebreakers length = %d, want 3", cards, len(tiebreakers))
+	}
+	if len(tiebreakers) >= 3 {
+		if tiebreakers[0] != Ace {
+			t.Errorf("detectTwoPair(%v) high pair = %v, want %v", cards, tiebreakers[0], Ace)
+		}
+		if tiebreakers[1] != Seven {
+			t.Errorf("detectTwoPair(%v) low pair = %v, want %v", cards, tiebreakers[1], Seven)
+		}
+		if tiebreakers[2] != Three {
+			t.Errorf("detectTwoPair(%v) kicker = %v, want %v", cards, tiebreakers[2], Three)
+		}
+	}
+}
+
+// TestDetectTwoPair_FalseForFullHouse verifies that detectTwoPair returns false
+// for a full house (three of a kind plus a pair).
+func TestDetectTwoPair_FalseForFullHouse(t *testing.T) {
+	// Arrange: Create Kh-Kd-Kc-7s-7h (kings full of sevens)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: King, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Seven, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectTwoPair(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectTwoPair(%v) = true, want false (full house, not two pair)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectTwoPair(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectTwoPair_FalseForOnePair verifies that detectTwoPair returns false
+// for one pair only.
+func TestDetectTwoPair_FalseForOnePair(t *testing.T) {
+	// Arrange: Create Qh-Qd-8s-5c-2h (queens with 8-5-2 kickers)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Eight, Suit: Spades},
+		{Rank: Five, Suit: Clubs},
+		{Rank: Two, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectTwoPair(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectTwoPair(%v) = true, want false (one pair, not two pair)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectTwoPair(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}

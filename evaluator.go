@@ -240,3 +240,48 @@ func detectThreeOfAKind(cards []Card) (bool, []Rank) {
 
 	return false, []Rank{}
 }
+
+// detectTwoPair checks if the given 5 cards contain exactly two pairs.
+// Returns (true, [high pair, low pair, kicker]) if found,
+// or (false, nil) if not two pair or if it's a full house.
+func detectTwoPair(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, nil
+	}
+
+	counts := rankCounts(cards)
+
+	// Find ranks with exactly 2 cards and ranks with 3+ cards
+	pairs := make([]Rank, 0, 2)
+	hasTrips := false
+
+	for rank, count := range counts {
+		if count == 2 {
+			pairs = append(pairs, rank)
+		} else if count >= 3 {
+			hasTrips = true
+		}
+	}
+
+	// Must have exactly two pairs and no trips/quads (if trips exist, it's a full house)
+	if len(pairs) != 2 || hasTrips {
+		return false, nil
+	}
+
+	// Sort pairs descending (high pair first)
+	if pairs[0] < pairs[1] {
+		pairs[0], pairs[1] = pairs[1], pairs[0]
+	}
+
+	// Find the kicker (the single remaining card)
+	var kicker Rank
+	for rank, count := range counts {
+		if count == 1 {
+			kicker = rank
+			break
+		}
+	}
+
+	// Return [high pair, low pair, kicker]
+	return true, []Rank{pairs[0], pairs[1], kicker}
+}
