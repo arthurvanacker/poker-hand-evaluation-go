@@ -843,6 +843,343 @@ func TestDetectFourOfAKind_FalseForTrips(t *testing.T) {
 	}
 }
 
+// TestDetectFullHouse_TrueForKingsOverSevens verifies that detectFullHouse returns true
+// and correct tiebreakers [trip rank, pair rank] for K-K-K-7-7.
+func TestDetectFullHouse_TrueForKingsOverSevens(t *testing.T) {
+	// Arrange: Create Kh-Kd-Kc-7s-7h (kings full of sevens)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: King, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Seven, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectFullHouse(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectFullHouse(%v) = false, want true", cards)
+	}
+	if len(tiebreakers) != 2 {
+		t.Errorf("detectFullHouse(%v) tiebreakers length = %d, want 2", cards, len(tiebreakers))
+	}
+	if len(tiebreakers) >= 2 {
+		if tiebreakers[0] != King {
+			t.Errorf("detectFullHouse(%v) trip rank = %v, want %v", cards, tiebreakers[0], King)
+		}
+		if tiebreakers[1] != Seven {
+			t.Errorf("detectFullHouse(%v) pair rank = %v, want %v", cards, tiebreakers[1], Seven)
+		}
+	}
+}
+
+// TestDetectFullHouse_FalseForThreeOfAKind verifies that detectFullHouse returns false
+// for three of a kind without a pair.
+func TestDetectFullHouse_FalseForThreeOfAKind(t *testing.T) {
+	// Arrange: Create Qh-Qd-Qc-9s-3h (three queens, no pair)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Nine, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectFullHouse(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectFullHouse(%v) = true, want false (three of a kind, not full house)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectFullHouse(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestDetectFullHouse_FalseForTwoPair verifies that detectFullHouse returns false
+// for two pair (no trips).
+func TestDetectFullHouse_FalseForTwoPair(t *testing.T) {
+	// Arrange: Create Ah-Ad-7h-7d-3s (two pair: aces and sevens)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds},
+		{Rank: Three, Suit: Spades},
+	}
+
+	// Act
+	result, tiebreakers := detectFullHouse(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectFullHouse(%v) = true, want false (two pair, not full house)", cards)
+	}
+	if len(tiebreakers) != 0 {
+		t.Errorf("detectFullHouse(%v) tiebreakers = %v, want empty slice", cards, tiebreakers)
+	}
+}
+
+// TestEvaluateHand_RoyalFlush verifies that EvaluateHand correctly identifies a royal flush.
+func TestEvaluateHand_RoyalFlush(t *testing.T) {
+	// Arrange: Create royal flush (Th-Jh-Qh-Kh-Ah)
+	cards := []Card{
+		{Rank: Ten, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+		{Rank: Ace, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != RoyalFlush {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, RoyalFlush)
+	}
+}
+
+// TestEvaluateHand_StraightFlush verifies that EvaluateHand correctly identifies a straight flush.
+func TestEvaluateHand_StraightFlush(t *testing.T) {
+	// Arrange: Create straight flush (5h-6h-7h-8h-9h)
+	cards := []Card{
+		{Rank: Five, Suit: Hearts},
+		{Rank: Six, Suit: Hearts},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != StraightFlush {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, StraightFlush)
+	}
+	if len(hand.Tiebreakers) != 1 || hand.Tiebreakers[0] != Nine {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v]", cards, hand.Tiebreakers, Nine)
+	}
+}
+
+// TestEvaluateHand_FourOfAKind verifies that EvaluateHand correctly identifies four of a kind.
+func TestEvaluateHand_FourOfAKind(t *testing.T) {
+	// Arrange: Create four of a kind (8h-8d-8c-8s-Kh)
+	cards := []Card{
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Eight, Suit: Clubs},
+		{Rank: Eight, Suit: Spades},
+		{Rank: King, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != FourOfAKind {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, FourOfAKind)
+	}
+	if len(hand.Tiebreakers) != 2 || hand.Tiebreakers[0] != Eight || hand.Tiebreakers[1] != King {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v, %v]", cards, hand.Tiebreakers, Eight, King)
+	}
+}
+
+// TestEvaluateHand_FullHouse verifies that EvaluateHand correctly identifies a full house.
+func TestEvaluateHand_FullHouse(t *testing.T) {
+	// Arrange: Create full house (Kh-Kd-Kc-7s-7h)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: King, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Seven, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != FullHouse {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, FullHouse)
+	}
+	if len(hand.Tiebreakers) != 2 || hand.Tiebreakers[0] != King || hand.Tiebreakers[1] != Seven {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v, %v]", cards, hand.Tiebreakers, King, Seven)
+	}
+}
+
+// TestEvaluateHand_Flush verifies that EvaluateHand correctly identifies a flush.
+func TestEvaluateHand_Flush(t *testing.T) {
+	// Arrange: Create flush (2h-5h-7h-9h-Jh)
+	cards := []Card{
+		{Rank: Two, Suit: Hearts},
+		{Rank: Five, Suit: Hearts},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != Flush {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, Flush)
+	}
+	if len(hand.Tiebreakers) != 5 {
+		t.Errorf("EvaluateHand(%v) tiebreakers length = %d, want 5", cards, len(hand.Tiebreakers))
+	}
+}
+
+// TestEvaluateHand_Straight verifies that EvaluateHand correctly identifies a straight.
+func TestEvaluateHand_Straight(t *testing.T) {
+	// Arrange: Create straight (5h-6d-7c-8s-9h)
+	cards := []Card{
+		{Rank: Five, Suit: Hearts},
+		{Rank: Six, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+		{Rank: Eight, Suit: Spades},
+		{Rank: Nine, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != Straight {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, Straight)
+	}
+	if len(hand.Tiebreakers) != 1 || hand.Tiebreakers[0] != Nine {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v]", cards, hand.Tiebreakers, Nine)
+	}
+}
+
+// TestEvaluateHand_ThreeOfAKind verifies that EvaluateHand correctly identifies three of a kind.
+func TestEvaluateHand_ThreeOfAKind(t *testing.T) {
+	// Arrange: Create three of a kind (Qh-Qd-Qc-9s-3h)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Nine, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != ThreeOfAKind {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, ThreeOfAKind)
+	}
+	if len(hand.Tiebreakers) != 3 || hand.Tiebreakers[0] != Queen {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v, ...]", cards, hand.Tiebreakers, Queen)
+	}
+}
+
+// TestEvaluateHand_TwoPair verifies that EvaluateHand correctly identifies two pair.
+func TestEvaluateHand_TwoPair(t *testing.T) {
+	// Arrange: Create two pair (Kh-Kd-7c-7s-3h)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != TwoPair {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, TwoPair)
+	}
+	if len(hand.Tiebreakers) != 3 || hand.Tiebreakers[0] != King || hand.Tiebreakers[1] != Seven || hand.Tiebreakers[2] != Three {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v, %v, %v]", cards, hand.Tiebreakers, King, Seven, Three)
+	}
+}
+
+// TestEvaluateHand_OnePair verifies that EvaluateHand correctly identifies one pair.
+func TestEvaluateHand_OnePair(t *testing.T) {
+	// Arrange: Create one pair (Jh-Jd-9c-5s-2h)
+	cards := []Card{
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Nine, Suit: Clubs},
+		{Rank: Five, Suit: Spades},
+		{Rank: Two, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != OnePair {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, OnePair)
+	}
+	if len(hand.Tiebreakers) != 4 || hand.Tiebreakers[0] != Jack {
+		t.Errorf("EvaluateHand(%v) tiebreakers = %v, want [%v, ...]", cards, hand.Tiebreakers, Jack)
+	}
+}
+
+// TestEvaluateHand_HighCard verifies that EvaluateHand correctly identifies high card.
+func TestEvaluateHand_HighCard(t *testing.T) {
+	// Arrange: Create high card (Ah-Kd-9c-5s-2h)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Nine, Suit: Clubs},
+		{Rank: Five, Suit: Spades},
+		{Rank: Two, Suit: Hearts},
+	}
+
+	// Act
+	hand := EvaluateHand(cards)
+
+	// Assert
+	if hand == nil {
+		t.Fatal("EvaluateHand returned nil")
+	}
+	if hand.Category != HighCard {
+		t.Errorf("EvaluateHand(%v) category = %v, want %v", cards, hand.Category, HighCard)
+	}
+	if len(hand.Tiebreakers) != 5 {
+		t.Errorf("EvaluateHand(%v) tiebreakers length = %d, want 5", cards, len(hand.Tiebreakers))
+	}
+}
+
 // TestIsFlushWithWrongNumberOfCards tests edge case with non-5 cards
 func TestIsFlushWithWrongNumberOfCards(t *testing.T) {
 	tests := []struct {

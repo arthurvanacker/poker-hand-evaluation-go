@@ -161,6 +161,37 @@ func detectFourOfAKind(cards []Card) (bool, []Rank) {
 	return false, []Rank{}
 }
 
+// detectFullHouse checks if the given 5 cards contain a full house.
+// A full house is three of a kind plus a pair.
+// Returns true and tiebreakers [trip rank, pair rank] if full house is found.
+// Returns false and empty slice if no full house exists.
+func detectFullHouse(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, []Rank{}
+	}
+
+	counts := rankCounts(cards)
+
+	var tripRank Rank
+	var pairRank Rank
+
+	// Find the rank that appears 3 times and 2 times
+	for rank, count := range counts {
+		if count == 3 {
+			tripRank = rank
+		} else if count == 2 {
+			pairRank = rank
+		}
+	}
+
+	// If we found both trip and pair, we have a full house
+	if tripRank != 0 && pairRank != 0 {
+		return true, []Rank{tripRank, pairRank}
+	}
+
+	return false, []Rank{}
+}
+
 // detectFlush detects a flush (5 suited cards, not sequential)
 // Returns true and ranks in descending order if flush, false and nil otherwise
 // Returns false for straight flushes (they are handled separately)
@@ -359,4 +390,102 @@ func detectHighCard(cards []Card) (bool, []Rank) {
 
 	// Always returns true with all 5 ranks as tiebreakers
 	return true, ranks
+}
+
+// EvaluateHand evaluates a 5-card poker hand and returns the best hand category with tiebreakers.
+// Checks hand categories from strongest (Royal Flush) to weakest (High Card).
+// Returns nil if the input is not exactly 5 cards.
+func EvaluateHand(cards []Card) *Hand {
+	if len(cards) != 5 {
+		return nil
+	}
+
+	// Check Royal Flush
+	if detectRoyalFlush(cards) {
+		return &Hand{
+			Cards:       cards,
+			Category:    RoyalFlush,
+			Tiebreakers: []Rank{}, // Royal flush has no tiebreakers (all equal)
+		}
+	}
+
+	// Check Straight Flush
+	if found, highCard := detectStraightFlush(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    StraightFlush,
+			Tiebreakers: []Rank{highCard},
+		}
+	}
+
+	// Check Four of a Kind
+	if found, tiebreakers := detectFourOfAKind(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    FourOfAKind,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Check Full House
+	if found, tiebreakers := detectFullHouse(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    FullHouse,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Check Flush
+	if found, tiebreakers := detectFlush(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    Flush,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Check Straight
+	if found, highCard := detectStraight(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    Straight,
+			Tiebreakers: []Rank{highCard},
+		}
+	}
+
+	// Check Three of a Kind
+	if found, tiebreakers := detectThreeOfAKind(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    ThreeOfAKind,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Check Two Pair
+	if found, tiebreakers := detectTwoPair(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    TwoPair,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Check One Pair
+	if found, tiebreakers := detectOnePair(cards); found {
+		return &Hand{
+			Cards:       cards,
+			Category:    OnePair,
+			Tiebreakers: tiebreakers,
+		}
+	}
+
+	// Default to High Card (always succeeds)
+	_, tiebreakers := detectHighCard(cards)
+	return &Hand{
+		Cards:       cards,
+		Category:    HighCard,
+		Tiebreakers: tiebreakers,
+	}
 }
