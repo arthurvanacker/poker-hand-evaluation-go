@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/puupa/poker-hand-evaluation/pkg/poker"
+	"github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 )
 
 func main() {

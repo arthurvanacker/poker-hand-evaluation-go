@@ -3,7 +3,7 @@
 A high-quality Texas Hold'em poker hand evaluator written in Go that identifies the best 5-card hand from 5, 6, or 7 cards. Supports all standard poker hand categories from Royal Flush to High Card with proper tiebreaker resolution.
 
 [![Go Version](https://img.shields.io/badge/Go-1.24.7-blue.svg)](https://golang.org/dl/)
-[![Test Coverage](https://img.shields.io/badge/coverage-92.7%25-brightgreen.svg)](https://github.com/puupa/poker-hand-evaluation)
+[![Test Coverage](https://img.shields.io/badge/coverage-92.7%25-brightgreen.svg)](https://github.com/Zabooya/poker-hand-evaluation)
 
 ## Features
 
@@ -47,13 +47,13 @@ A high-quality Texas Hold'em poker hand evaluator written in Go that identifies 
 ### Install Package
 
 ```bash
-go get github.com/puupa/poker-hand-evaluation
+go get github.com/Zabooya/poker-hand-evaluation
 ```
 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/puupa/poker-hand-evaluation.git
+git clone https://github.com/Zabooya/poker-hand-evaluation.git
 cd poker-hand-evaluation
 ```
 
@@ -76,7 +76,7 @@ package main
 
 import (
     "fmt"
-    "github.com/puupa/poker-hand-evaluation/pkg/poker"
+    "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 )
 
 func main() {
@@ -102,7 +102,7 @@ func main() {
 Cards can be created using the `Card` struct or parsed from string notation:
 
 ```go
-import "github.com/puupa/poker-hand-evaluation/pkg/poker"
+import "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 
 // Method 1: Direct construction
 card1 := poker.Card{Rank: poker.Ace, Suit: poker.Hearts}
@@ -134,7 +134,7 @@ Create and manipulate a standard 52-card deck:
 import (
     "math/rand"
     "time"
-    "github.com/puupa/poker-hand-evaluation/pkg/poker"
+    "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 )
 
 // Create a new deck
@@ -163,7 +163,7 @@ fmt.Printf("Remaining: %d cards\n", len(deck.Cards)) // Output: 45
 Evaluate exactly 5 cards to determine hand category and tiebreakers:
 
 ```go
-import "github.com/puupa/poker-hand-evaluation/pkg/poker"
+import "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 
 // Parse 5 cards
 cardStrings := []string{"Ah", "Kh", "Qh", "Jh", "Th"}
@@ -188,7 +188,7 @@ fmt.Printf("Cards: %v\n", hand.Cards)                 // [Ah Kh Qh Jh Th]
 Compare two hands to determine the winner:
 
 ```go
-import "github.com/puupa/poker-hand-evaluation/pkg/poker"
+import "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 
 // Create two hands
 cards1, _ := parseCards([]string{"Ah", "Ad", "Kh", "Kd", "Qh"})
@@ -227,7 +227,7 @@ func parseCards(strs []string) ([]poker.Card, error) {
 Automatically find the best 5-card hand from 5, 6, or 7 cards:
 
 ```go
-import "github.com/puupa/poker-hand-evaluation/pkg/poker"
+import "github.com/Zabooya/poker-hand-evaluation/pkg/poker"
 
 // Texas Hold'em scenario: 2 hole cards + 5 community cards
 holeCards, _ := parseCards([]string{"Ah", "Kh"})
@@ -782,7 +782,7 @@ Contributions are welcome! Please ensure:
 
 ## Author
 
-**Puupa** - [GitHub Profile](https://github.com/puupa)
+**Zabooya** - [GitHub Profile](https://github.com/Zabooya)
 
 ## Acknowledgments
 
