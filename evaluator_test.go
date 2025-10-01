@@ -577,6 +577,96 @@ func TestDetectRoyalFlush_FalseForRegularFlush(t *testing.T) {
 	}
 }
 
+// TestDetectStraight_TrueForBroadwayStraight verifies that detectStraight
+// returns true with high rank for 9-10-J-Q-K straight (mixed suits).
+func TestDetectStraight_TrueForBroadwayStraight(t *testing.T) {
+	// Arrange: Create 9-10-J-Q-K with mixed suits
+	cards := []Card{
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Ten, Suit: Diamonds},
+		{Rank: Jack, Suit: Clubs},
+		{Rank: Queen, Suit: Spades},
+		{Rank: King, Suit: Hearts},
+	}
+
+	// Act
+	isStraight, highRank := detectStraight(cards)
+
+	// Assert
+	if !isStraight {
+		t.Errorf("detectStraight(%v) = false, want true", cards)
+	}
+	if highRank != King {
+		t.Errorf("detectStraight(%v) high rank = %v, want King (13)", cards, highRank)
+	}
+}
+
+// TestDetectStraight_TrueForWheelStraight verifies that detectStraight
+// returns true with rank 5 for A-2-3-4-5 wheel straight (mixed suits).
+func TestDetectStraight_TrueForWheelStraight(t *testing.T) {
+	// Arrange: Create A-2-3-4-5 wheel with mixed suits
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Two, Suit: Diamonds},
+		{Rank: Three, Suit: Clubs},
+		{Rank: Four, Suit: Spades},
+		{Rank: Five, Suit: Hearts},
+	}
+
+	// Act
+	isStraight, highRank := detectStraight(cards)
+
+	// Assert
+	if !isStraight {
+		t.Errorf("detectStraight(%v) = false, want true", cards)
+	}
+	if highRank != Five {
+		t.Errorf("detectStraight(%v) high rank = %v, want Five (5)", cards, highRank)
+	}
+}
+
+// TestDetectStraight_FalseForStraightFlush verifies that detectStraight
+// returns false for a straight flush (should be detected as straight flush, not straight).
+func TestDetectStraight_FalseForStraightFlush(t *testing.T) {
+	// Arrange: Create 9-10-J-Q-K straight flush in hearts
+	cards := []Card{
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Ten, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Queen, Suit: Hearts},
+		{Rank: King, Suit: Hearts},
+	}
+
+	// Act
+	isStraight, _ := detectStraight(cards)
+
+	// Assert
+	if isStraight {
+		t.Errorf("detectStraight(%v) = true, want false (should be straight flush)", cards)
+	}
+}
+
+// TestDetectStraight_FalseForNonStraight verifies that detectStraight
+// returns false for non-sequential cards.
+func TestDetectStraight_FalseForNonStraight(t *testing.T) {
+	// Arrange: Create non-straight hand (2-5-7-9-J)
+	cards := []Card{
+		{Rank: Two, Suit: Hearts},
+		{Rank: Five, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+		{Rank: Nine, Suit: Spades},
+		{Rank: Jack, Suit: Hearts},
+	}
+
+	// Act
+	isStraight, _ := detectStraight(cards)
+
+	// Assert
+	if isStraight {
+		t.Errorf("detectStraight(%v) = true, want false", cards)
+	}
+}
+
 // TestDetectStraightFlush_TrueForNineHighStraightFlush verifies that detectStraightFlush
 // returns true and correct high card for 5h-6h-7h-8h-9h.
 func TestDetectStraightFlush_TrueForNineHighStraightFlush(t *testing.T) {

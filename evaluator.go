@@ -186,3 +186,21 @@ func detectFlush(cards []Card) (bool, []Rank) {
 
 	return true, ranks
 }
+
+// detectStraight checks if the given 5 cards form a straight (5 sequential cards with mixed suits).
+// Returns (true, highRank) if cards form a non-flush straight, (false, 0) otherwise.
+// Returns false for straight flushes (those should be detected separately).
+// Special case: wheel straight (A-2-3-4-5) returns (true, Five).
+func detectStraight(cards []Card) (bool, Rank) {
+	if len(cards) != 5 {
+		return false, 0
+	}
+
+	// Check if it's a flush - if so, it's not a plain straight
+	if isFlush(cards) {
+		return false, 0
+	}
+
+	// Use isStraight helper to check for sequential ranks
+	return isStraight(cards)
+}
