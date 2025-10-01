@@ -1412,3 +1412,86 @@ func TestDetectOnePair_FalseForHighCard(t *testing.T) {
 		t.Errorf("detectOnePair(%v) = true, want false (high card, no pair)", cards)
 	}
 }
+
+// TestDetectHighCard_TrueForAceHighRainbow verifies that detectHighCard returns true
+// and correct kickers [A-K-T-7-3] in descending order for Ah-Kd-Tc-7s-3h (rainbow).
+func TestDetectHighCard_TrueForAceHighRainbow(t *testing.T) {
+	// Arrange: Create Ah-Kd-Tc-7s-3h (ace-high with no pairs/straights/flushes)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: Ten, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Three, Suit: Hearts},
+	}
+
+	// Act
+	result, tiebreakers := detectHighCard(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectHighCard(%v) = false, want true (always true)", cards)
+	}
+	expectedTiebreakers := []Rank{Ace, King, Ten, Seven, Three}
+	if len(tiebreakers) != len(expectedTiebreakers) {
+		t.Errorf("detectHighCard(%v) tiebreakers length = %d, want %d", cards, len(tiebreakers), len(expectedTiebreakers))
+	}
+	for i := 0; i < len(tiebreakers) && i < len(expectedTiebreakers); i++ {
+		if tiebreakers[i] != expectedTiebreakers[i] {
+			t.Errorf("detectHighCard(%v) tiebreakers[%d] = %v, want %v", cards, i, tiebreakers[i], expectedTiebreakers[i])
+		}
+	}
+}
+
+// TestDetectHighCard_AlwaysReturnsTrue verifies that detectHighCard always returns true
+// as it is the fallback category for any 5-card hand.
+func TestDetectHighCard_AlwaysReturnsTrue(t *testing.T) {
+	// Test various hand types to ensure detectHighCard always returns true
+	testCases := []struct {
+		name  string
+		cards []Card
+	}{
+		{
+			name: "Flush should still return true",
+			cards: []Card{
+				{Rank: Two, Suit: Hearts},
+				{Rank: Five, Suit: Hearts},
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+			},
+		},
+		{
+			name: "Pair should still return true",
+			cards: []Card{
+				{Rank: Eight, Suit: Hearts},
+				{Rank: Eight, Suit: Diamonds},
+				{Rank: King, Suit: Clubs},
+				{Rank: Seven, Suit: Spades},
+				{Rank: Three, Suit: Hearts},
+			},
+		},
+		{
+			name: "Random low cards should return true",
+			cards: []Card{
+				{Rank: Two, Suit: Hearts},
+				{Rank: Four, Suit: Diamonds},
+				{Rank: Six, Suit: Clubs},
+				{Rank: Eight, Suit: Spades},
+				{Rank: Ten, Suit: Hearts},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Act
+			result, _ := detectHighCard(tc.cards)
+
+			// Assert
+			if !result {
+				t.Errorf("detectHighCard(%v) = false, want true (always returns true)", tc.cards)
+			}
+		})
+	}
+}

@@ -334,3 +334,29 @@ func detectOnePair(cards []Card) (bool, []Rank) {
 
 	return true, tiebreakers
 }
+
+// detectHighCard checks if the given 5 cards form a high card hand.
+// Returns true (always, as it's the fallback category) and all 5 ranks in descending order as tiebreakers.
+func detectHighCard(cards []Card) (bool, []Rank) {
+	if len(cards) != 5 {
+		return false, []Rank{}
+	}
+
+	// Extract all ranks
+	ranks := make([]Rank, 5)
+	for i, card := range cards {
+		ranks[i] = card.Rank
+	}
+
+	// Sort ranks in descending order (bubble sort for 5 elements)
+	for i := 0; i < 5; i++ {
+		for j := i + 1; j < 5; j++ {
+			if ranks[i] < ranks[j] {
+				ranks[i], ranks[j] = ranks[j], ranks[i]
+			}
+		}
+	}
+
+	// Always returns true with all 5 ranks as tiebreakers
+	return true, ranks
+}
