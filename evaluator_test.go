@@ -573,3 +573,228 @@ func TestDetectRoyalFlush_FalseForRegularFlush(t *testing.T) {
 		t.Errorf("detectRoyalFlush(%v) = true, want false", cards)
 	}
 }
+
+// TestDetectStraightFlush_TrueForNineHighStraightFlush verifies that detectStraightFlush
+// returns true and correct high card for 5h-6h-7h-8h-9h.
+func TestDetectStraightFlush_TrueForNineHighStraightFlush(t *testing.T) {
+	// Arrange: Create 5h-6h-7h-8h-9h (nine-high straight flush)
+	cards := []Card{
+		{Rank: Five, Suit: Hearts},
+		{Rank: Six, Suit: Hearts},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+	}
+
+	// Act
+	result, highCard := detectStraightFlush(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectStraightFlush(%v) = false, want true", cards)
+	}
+	if highCard != Nine {
+		t.Errorf("detectStraightFlush(%v) high card = %v, want %v", cards, highCard, Nine)
+	}
+}
+
+// TestDetectStraightFlush_TrueForWheelFlush verifies that detectStraightFlush
+// returns true and rank 5 for Ah-2h-3h-4h-5h (wheel straight flush).
+func TestDetectStraightFlush_TrueForWheelFlush(t *testing.T) {
+	// Arrange: Create Ah-2h-3h-4h-5h (wheel straight flush)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Two, Suit: Hearts},
+		{Rank: Three, Suit: Hearts},
+		{Rank: Four, Suit: Hearts},
+		{Rank: Five, Suit: Hearts},
+	}
+
+	// Act
+	result, highCard := detectStraightFlush(cards)
+
+	// Assert
+	if !result {
+		t.Errorf("detectStraightFlush(%v) = false, want true", cards)
+	}
+	if highCard != Five {
+		t.Errorf("detectStraightFlush(%v) high card = %v, want %v (Ace acts as low)", cards, highCard, Five)
+	}
+}
+
+// TestDetectStraightFlush_FalseForNonFlushStraight verifies that detectStraightFlush
+// returns false for a straight that is not a flush.
+func TestDetectStraightFlush_FalseForNonFlushStraight(t *testing.T) {
+	// Arrange: Create 5h-6d-7c-8s-9h (straight with mixed suits)
+	cards := []Card{
+		{Rank: Five, Suit: Hearts},
+		{Rank: Six, Suit: Diamonds},
+		{Rank: Seven, Suit: Clubs},
+		{Rank: Eight, Suit: Spades},
+		{Rank: Nine, Suit: Hearts},
+	}
+
+	// Act
+	result, highCard := detectStraightFlush(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectStraightFlush(%v) = true, want false (not a flush)", cards)
+	}
+	if highCard != 0 {
+		t.Errorf("detectStraightFlush(%v) high card = %v, want 0", cards, highCard)
+	}
+}
+
+// TestDetectStraightFlush_FalseForNonStraightFlush verifies that detectStraightFlush
+// returns false for a flush that is not a straight.
+func TestDetectStraightFlush_FalseForNonStraightFlush(t *testing.T) {
+	// Arrange: Create 2h-5h-7h-9h-Jh (flush with gaps, not sequential)
+	cards := []Card{
+		{Rank: Two, Suit: Hearts},
+		{Rank: Five, Suit: Hearts},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Nine, Suit: Hearts},
+		{Rank: Jack, Suit: Hearts},
+	}
+
+	// Act
+	result, highCard := detectStraightFlush(cards)
+
+	// Assert
+	if result {
+		t.Errorf("detectStraightFlush(%v) = true, want false (not a straight)", cards)
+	}
+	if highCard != 0 {
+		t.Errorf("detectStraightFlush(%v) high card = %v, want 0", cards, highCard)
+	}
+}
+
+// TestIsFlushWithWrongNumberOfCards tests edge case with non-5 cards
+func TestIsFlushWithWrongNumberOfCards(t *testing.T) {
+	tests := []struct {
+		name  string
+		cards []Card
+	}{
+		{
+			"empty slice",
+			[]Card{},
+		},
+		{
+			"4 cards",
+			[]Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Hearts},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+			},
+		},
+		{
+			"6 cards",
+			[]Card{
+				{Rank: Ace, Suit: Hearts},
+				{Rank: King, Suit: Hearts},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+				{Rank: Ten, Suit: Hearts},
+				{Rank: Nine, Suit: Hearts},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isFlush(tt.cards)
+			if result {
+				t.Errorf("isFlush with %d cards should return false, got true", len(tt.cards))
+			}
+		})
+	}
+}
+
+// TestIsStraightWithWrongNumberOfCards tests edge case with non-5 cards
+func TestIsStraightWithWrongNumberOfCards(t *testing.T) {
+	tests := []struct {
+		name  string
+		cards []Card
+	}{
+		{
+			"empty slice",
+			[]Card{},
+		},
+		{
+			"4 cards",
+			[]Card{
+				{Rank: Five, Suit: Hearts},
+				{Rank: Six, Suit: Hearts},
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Eight, Suit: Hearts},
+			},
+		},
+		{
+			"6 cards",
+			[]Card{
+				{Rank: Five, Suit: Hearts},
+				{Rank: Six, Suit: Hearts},
+				{Rank: Seven, Suit: Hearts},
+				{Rank: Eight, Suit: Hearts},
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Ten, Suit: Hearts},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, rank := isStraight(tt.cards)
+			if result {
+				t.Errorf("isStraight with %d cards should return false, got true with rank %v", len(tt.cards), rank)
+			}
+			if rank != 0 {
+				t.Errorf("isStraight with %d cards should return rank 0, got %v", len(tt.cards), rank)
+			}
+		})
+	}
+}
+
+// TestDetectRoyalFlushWithWrongNumberOfCards tests edge case with non-5 cards
+func TestDetectRoyalFlushWithWrongNumberOfCards(t *testing.T) {
+	tests := []struct {
+		name  string
+		cards []Card
+	}{
+		{
+			"empty slice",
+			[]Card{},
+		},
+		{
+			"4 royal cards",
+			[]Card{
+				{Rank: Ten, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: King, Suit: Hearts},
+			},
+		},
+		{
+			"6 cards with royal",
+			[]Card{
+				{Rank: Nine, Suit: Hearts},
+				{Rank: Ten, Suit: Hearts},
+				{Rank: Jack, Suit: Hearts},
+				{Rank: Queen, Suit: Hearts},
+				{Rank: King, Suit: Hearts},
+				{Rank: Ace, Suit: Hearts},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := detectRoyalFlush(tt.cards)
+			if result {
+				t.Errorf("detectRoyalFlush with %d cards should return false, got true", len(tt.cards))
+			}
+		})
+	}
+}

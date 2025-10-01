@@ -108,3 +108,23 @@ func detectRoyalFlush(cards []Card) bool {
 	// All required ranks should be consumed (map should be empty)
 	return len(requiredRanks) == 0
 }
+
+// detectStraightFlush checks if the given 5 cards form a straight flush.
+// A straight flush is 5 sequential cards all of the same suit (excluding royal flush).
+// Returns true and the high card rank if a straight flush is detected.
+// For the wheel straight flush (Ah-2h-3h-4h-5h), returns Five as the high card.
+func detectStraightFlush(cards []Card) (bool, Rank) {
+	// Check if all cards are the same suit
+	if !isFlush(cards) {
+		return false, 0
+	}
+
+	// Check if cards form a straight sequence
+	isStraight, highCard := isStraight(cards)
+	if !isStraight {
+		return false, 0
+	}
+
+	// Both conditions met: it's a straight flush
+	return true, highCard
+}
