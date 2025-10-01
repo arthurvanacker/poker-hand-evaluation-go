@@ -1688,3 +1688,148 @@ func TestFindBestHand_HandlesHighCard(t *testing.T) {
 		t.Errorf("FindBestHand category = %v, want %v", hand.Category, HighCard)
 	}
 }
+
+// TestDetectFourOfAKind_WithPrecomputedCounts verifies that detectFourOfAKind
+// can accept optional precomputed rank counts to avoid redundant computation.
+func TestDetectFourOfAKind_WithPrecomputedCounts(t *testing.T) {
+	// Arrange: Create 8h-8d-8c-8s-Kh (four eights with king kicker)
+	cards := []Card{
+		{Rank: Eight, Suit: Hearts},
+		{Rank: Eight, Suit: Diamonds},
+		{Rank: Eight, Suit: Clubs},
+		{Rank: Eight, Suit: Spades},
+		{Rank: King, Suit: Hearts},
+	}
+
+	// Precompute rank counts
+	counts := rankCounts(cards)
+
+	// Act: Call with precomputed counts
+	result, tiebreakers := detectFourOfAKind(cards, counts)
+
+	// Assert
+	if !result {
+		t.Errorf("detectFourOfAKind(%v, counts) = false, want true", cards)
+	}
+	if len(tiebreakers) != 2 || tiebreakers[0] != Eight || tiebreakers[1] != King {
+		t.Errorf("detectFourOfAKind(%v, counts) tiebreakers = %v, want [%v, %v]", cards, tiebreakers, Eight, King)
+	}
+}
+
+// TestDetectFullHouse_WithPrecomputedCounts verifies that detectFullHouse
+// can accept optional precomputed rank counts to avoid redundant computation.
+func TestDetectFullHouse_WithPrecomputedCounts(t *testing.T) {
+	// Arrange: Create Kh-Kd-Kc-7s-7h (kings full of sevens)
+	cards := []Card{
+		{Rank: King, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+		{Rank: King, Suit: Clubs},
+		{Rank: Seven, Suit: Spades},
+		{Rank: Seven, Suit: Hearts},
+	}
+
+	// Precompute rank counts
+	counts := rankCounts(cards)
+
+	// Act: Call with precomputed counts
+	result, tiebreakers := detectFullHouse(cards, counts)
+
+	// Assert
+	if !result {
+		t.Errorf("detectFullHouse(%v, counts) = false, want true", cards)
+	}
+	if len(tiebreakers) != 2 || tiebreakers[0] != King || tiebreakers[1] != Seven {
+		t.Errorf("detectFullHouse(%v, counts) tiebreakers = %v, want [%v, %v]", cards, tiebreakers, King, Seven)
+	}
+}
+
+// TestDetectThreeOfAKind_WithPrecomputedCounts verifies that detectThreeOfAKind
+// can accept optional precomputed rank counts to avoid redundant computation.
+func TestDetectThreeOfAKind_WithPrecomputedCounts(t *testing.T) {
+	// Arrange: Create Qh-Qd-Qc-Ah-Kd (three queens, ace-king kickers)
+	cards := []Card{
+		{Rank: Queen, Suit: Hearts},
+		{Rank: Queen, Suit: Diamonds},
+		{Rank: Queen, Suit: Clubs},
+		{Rank: Ace, Suit: Hearts},
+		{Rank: King, Suit: Diamonds},
+	}
+
+	// Precompute rank counts
+	counts := rankCounts(cards)
+
+	// Act: Call with precomputed counts
+	result, tiebreakers := detectThreeOfAKind(cards, counts)
+
+	// Assert
+	if !result {
+		t.Errorf("detectThreeOfAKind(%v, counts) = false, want true", cards)
+	}
+	expectedTiebreakers := []Rank{Queen, Ace, King}
+	if !reflect.DeepEqual(tiebreakers, expectedTiebreakers) {
+		t.Errorf("detectThreeOfAKind(%v, counts) tiebreakers = %v, want %v", cards, tiebreakers, expectedTiebreakers)
+	}
+}
+
+// TestDetectTwoPair_WithPrecomputedCounts verifies that detectTwoPair
+// can accept optional precomputed rank counts to avoid redundant computation.
+func TestDetectTwoPair_WithPrecomputedCounts(t *testing.T) {
+	// Arrange: Create Ah-Ad-7h-7d-3s (aces and sevens with 3 kicker)
+	cards := []Card{
+		{Rank: Ace, Suit: Hearts},
+		{Rank: Ace, Suit: Diamonds},
+		{Rank: Seven, Suit: Hearts},
+		{Rank: Seven, Suit: Diamonds},
+		{Rank: Three, Suit: Spades},
+	}
+
+	// Precompute rank counts
+	counts := rankCounts(cards)
+
+	// Act: Call with precomputed counts
+	result, tiebreakers := detectTwoPair(cards, counts)
+
+	// Assert
+	if !result {
+		t.Errorf("detectTwoPair(%v, counts) = false, want true", cards)
+	}
+	if len(tiebreakers) != 3 || tiebreakers[0] != Ace || tiebreakers[1] != Seven || tiebreakers[2] != Three {
+		t.Errorf("detectTwoPair(%v, counts) tiebreakers = %v, want [%v, %v, %v]", cards, tiebreakers, Ace, Seven, Three)
+	}
+}
+
+// TestDetectOnePair_WithPrecomputedCounts verifies that detectOnePair
+// can accept optional precomputed rank counts to avoid redundant computation.
+func TestDetectOnePair_WithPrecomputedCounts(t *testing.T) {
+	// Arrange: Create J-J-9-6-2 (pair of Jacks)
+	cards := []Card{
+		{Rank: Jack, Suit: Hearts},
+		{Rank: Jack, Suit: Diamonds},
+		{Rank: Nine, Suit: Clubs},
+		{Rank: Six, Suit: Spades},
+		{Rank: Two, Suit: Hearts},
+	}
+
+	// Precompute rank counts
+	counts := rankCounts(cards)
+
+	// Act: Call with precomputed counts
+	found, tiebreakers := detectOnePair(cards, counts)
+
+	// Assert
+	if !found {
+		t.Errorf("detectOnePair(%v, counts) = false, want true", cards)
+	}
+
+	// Expected tiebreakers: [Jack (pair rank), Nine, Six, Two] in descending order
+	expectedTiebreakers := []Rank{Jack, Nine, Six, Two}
+	if len(tiebreakers) != len(expectedTiebreakers) {
+		t.Errorf("detectOnePair(%v, counts) tiebreakers length = %d, want %d", cards, len(tiebreakers), len(expectedTiebreakers))
+	}
+
+	for i, expected := range expectedTiebreakers {
+		if tiebreakers[i] != expected {
+			t.Errorf("detectOnePair(%v, counts) tiebreakers[%d] = %v, want %v", cards, i, tiebreakers[i], expected)
+		}
+	}
+}

@@ -1,6 +1,20 @@
 package poker
 
-import "sort"
+// sortRanksDescending sorts a slice of Rank values in descending order using insertion sort.
+// Optimized for small arrays (n ≤ 10) with zero allocations.
+// Time complexity: O(n²), which is optimal for tiny fixed-size arrays.
+func sortRanksDescending(ranks []Rank) {
+	for i := 1; i < len(ranks); i++ {
+		key := ranks[i]
+		j := i - 1
+		// Shift elements smaller than key to the right (descending order)
+		for j >= 0 && ranks[j] < key {
+			ranks[j+1] = ranks[j]
+			j--
+		}
+		ranks[j+1] = key
+	}
+}
 
 // isFlush checks if all 5 cards are the same suit.
 // Returns true if all cards share the same suit, false otherwise.
@@ -36,14 +50,8 @@ func isStraight(cards []Card) (bool, Rank) {
 		ranks[i] = card.Rank
 	}
 
-	// Bubble sort descending (simple for 5 elements)
-	for i := 0; i < 5; i++ {
-		for j := i + 1; j < 5; j++ {
-			if ranks[i] < ranks[j] {
-				ranks[i], ranks[j] = ranks[j], ranks[i]
-			}
-		}
-	}
+	// Sort ranks in descending order
+	sortRanksDescending(ranks)
 
 	// Check for wheel straight: A-2-3-4-5 (14-5-4-3-2 when sorted descending)
 	if ranks[0] == Ace && ranks[1] == Five && ranks[2] == Four && ranks[3] == Three && ranks[4] == Two {
@@ -132,18 +140,24 @@ func detectStraightFlush(cards []Card) (bool, Rank) {
 // detectFourOfAKind checks if the given 5 cards contain four of a kind.
 // Returns true and tiebreakers [quad rank, kicker] if four of a kind is found.
 // Returns false and empty slice if no four of a kind exists.
-func detectFourOfAKind(cards []Card) (bool, []Rank) {
+// Optional counts parameter can be provided to avoid redundant rankCounts computation.
+func detectFourOfAKind(cards []Card, counts ...map[Rank]int) (bool, []Rank) {
 	if len(cards) != 5 {
 		return false, []Rank{}
 	}
 
-	counts := rankCounts(cards)
+	var rankMap map[Rank]int
+	if len(counts) > 0 {
+		rankMap = counts[0] // Use cached counts
+	} else {
+		rankMap = rankCounts(cards) // Fallback for standalone calls
+	}
 
 	var quadRank Rank
 	var kicker Rank
 
 	// Find the rank that appears 4 times
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 4 {
 			quadRank = rank
 		} else if count == 1 {
@@ -163,18 +177,24 @@ func detectFourOfAKind(cards []Card) (bool, []Rank) {
 // A full house is three of a kind plus a pair.
 // Returns true and tiebreakers [trip rank, pair rank] if full house is found.
 // Returns false and empty slice if no full house exists.
-func detectFullHouse(cards []Card) (bool, []Rank) {
+// Optional counts parameter can be provided to avoid redundant rankCounts computation.
+func detectFullHouse(cards []Card, counts ...map[Rank]int) (bool, []Rank) {
 	if len(cards) != 5 {
 		return false, []Rank{}
 	}
 
-	counts := rankCounts(cards)
+	var rankMap map[Rank]int
+	if len(counts) > 0 {
+		rankMap = counts[0] // Use cached counts
+	} else {
+		rankMap = rankCounts(cards) // Fallback for standalone calls
+	}
 
 	var tripRank Rank
 	var pairRank Rank
 
 	// Find the rank that appears 3 times and 2 times
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 3 {
 			tripRank = rank
 		} else if count == 2 {
@@ -209,9 +229,7 @@ func detectFlush(cards []Card) (bool, []Rank) {
 	for i, card := range cards {
 		ranks[i] = card.Rank
 	}
-	sort.Slice(ranks, func(i, j int) bool {
-		return ranks[i] > ranks[j]
-	})
+	sortRanksDescending(ranks)
 
 	return true, ranks
 }
@@ -238,18 +256,24 @@ func detectStraight(cards []Card) (bool, Rank) {
 // Returns true and tiebreakers [trip rank, kicker1, kicker2] if three of a kind is found.
 // Returns false and empty slice if no three of a kind exists.
 // Full houses (three of a kind + pair) return false as they should be detected separately.
-func detectThreeOfAKind(cards []Card) (bool, []Rank) {
+// Optional counts parameter can be provided to avoid redundant rankCounts computation.
+func detectThreeOfAKind(cards []Card, counts ...map[Rank]int) (bool, []Rank) {
 	if len(cards) != 5 {
 		return false, []Rank{}
 	}
 
-	counts := rankCounts(cards)
+	var rankMap map[Rank]int
+	if len(counts) > 0 {
+		rankMap = counts[0] // Use cached counts
+	} else {
+		rankMap = rankCounts(cards) // Fallback for standalone calls
+	}
 
 	var tripRank Rank
 	var kickers []Rank
 
 	// Find the rank that appears exactly 3 times
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 3 {
 			tripRank = rank
 		} else if count == 1 {
@@ -273,18 +297,24 @@ func detectThreeOfAKind(cards []Card) (bool, []Rank) {
 // detectTwoPair checks if the given 5 cards contain exactly two pairs.
 // Returns (true, [high pair, low pair, kicker]) if found,
 // or (false, nil) if not two pair or if it's a full house.
-func detectTwoPair(cards []Card) (bool, []Rank) {
+// Optional counts parameter can be provided to avoid redundant rankCounts computation.
+func detectTwoPair(cards []Card, counts ...map[Rank]int) (bool, []Rank) {
 	if len(cards) != 5 {
 		return false, nil
 	}
 
-	counts := rankCounts(cards)
+	var rankMap map[Rank]int
+	if len(counts) > 0 {
+		rankMap = counts[0] // Use cached counts
+	} else {
+		rankMap = rankCounts(cards) // Fallback for standalone calls
+	}
 
 	// Find ranks with exactly 2 cards and ranks with 3+ cards
 	pairs := make([]Rank, 0, 2)
 	hasTrips := false
 
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 2 {
 			pairs = append(pairs, rank)
 		} else if count >= 3 {
@@ -304,7 +334,7 @@ func detectTwoPair(cards []Card) (bool, []Rank) {
 
 	// Find the kicker (the single remaining card)
 	var kicker Rank
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 1 {
 			kicker = rank
 			break
@@ -319,19 +349,25 @@ func detectTwoPair(cards []Card) (bool, []Rank) {
 // Returns (true, tiebreakers) if exactly one pair exists, where tiebreakers
 // contains [pair rank, kicker1, kicker2, kicker3] in descending order.
 // Returns (false, nil) if no pair, two pairs, trips, or quads are present.
-func detectOnePair(cards []Card) (bool, []Rank) {
+// Optional counts parameter can be provided to avoid redundant rankCounts computation.
+func detectOnePair(cards []Card, counts ...map[Rank]int) (bool, []Rank) {
 	if len(cards) != 5 {
 		return false, nil
 	}
 
-	counts := rankCounts(cards)
+	var rankMap map[Rank]int
+	if len(counts) > 0 {
+		rankMap = counts[0] // Use cached counts
+	} else {
+		rankMap = rankCounts(cards) // Fallback for standalone calls
+	}
 
 	// Count how many ranks appear exactly twice (pairs)
 	pairCount := 0
 	var pairRank Rank
 	var kickers []Rank
 
-	for rank, count := range counts {
+	for rank, count := range rankMap {
 		if count == 2 {
 			pairCount++
 			pairRank = rank
@@ -349,13 +385,7 @@ func detectOnePair(cards []Card) (bool, []Rank) {
 	}
 
 	// Sort kickers in descending order
-	for i := 0; i < len(kickers); i++ {
-		for j := i + 1; j < len(kickers); j++ {
-			if kickers[i] < kickers[j] {
-				kickers[i], kickers[j] = kickers[j], kickers[i]
-			}
-		}
-	}
+	sortRanksDescending(kickers)
 
 	// Build tiebreakers: [pair rank, kicker1, kicker2, kicker3]
 	tiebreakers := []Rank{pairRank}
@@ -377,14 +407,8 @@ func detectHighCard(cards []Card) (bool, []Rank) {
 		ranks[i] = card.Rank
 	}
 
-	// Sort ranks in descending order (bubble sort for 5 elements)
-	for i := 0; i < 5; i++ {
-		for j := i + 1; j < 5; j++ {
-			if ranks[i] < ranks[j] {
-				ranks[i], ranks[j] = ranks[j], ranks[i]
-			}
-		}
-	}
+	// Sort ranks in descending order
+	sortRanksDescending(ranks)
 
 	// Always returns true with all 5 ranks as tiebreakers
 	return true, ranks
@@ -393,10 +417,14 @@ func detectHighCard(cards []Card) (bool, []Rank) {
 // EvaluateHand evaluates a 5-card poker hand and returns the best hand category with tiebreakers.
 // Checks hand categories from strongest (Royal Flush) to weakest (High Card).
 // Returns nil if the input is not exactly 5 cards.
+// Optimized: precomputes rankCounts once and reuses it across detectors that need rank frequency data.
 func EvaluateHand(cards []Card) *Hand {
 	if len(cards) != 5 {
 		return nil
 	}
+
+	// Precompute rank counts once for all detectors that need it
+	counts := rankCounts(cards)
 
 	// Check Royal Flush
 	if detectRoyalFlush(cards) {
@@ -416,8 +444,8 @@ func EvaluateHand(cards []Card) *Hand {
 		}
 	}
 
-	// Check Four of a Kind
-	if found, tiebreakers := detectFourOfAKind(cards); found {
+	// Check Four of a Kind (pass precomputed counts)
+	if found, tiebreakers := detectFourOfAKind(cards, counts); found {
 		return &Hand{
 			Cards:       cards,
 			Category:    FourOfAKind,
@@ -425,8 +453,8 @@ func EvaluateHand(cards []Card) *Hand {
 		}
 	}
 
-	// Check Full House
-	if found, tiebreakers := detectFullHouse(cards); found {
+	// Check Full House (pass precomputed counts)
+	if found, tiebreakers := detectFullHouse(cards, counts); found {
 		return &Hand{
 			Cards:       cards,
 			Category:    FullHouse,
@@ -452,8 +480,8 @@ func EvaluateHand(cards []Card) *Hand {
 		}
 	}
 
-	// Check Three of a Kind
-	if found, tiebreakers := detectThreeOfAKind(cards); found {
+	// Check Three of a Kind (pass precomputed counts)
+	if found, tiebreakers := detectThreeOfAKind(cards, counts); found {
 		return &Hand{
 			Cards:       cards,
 			Category:    ThreeOfAKind,
@@ -461,8 +489,8 @@ func EvaluateHand(cards []Card) *Hand {
 		}
 	}
 
-	// Check Two Pair
-	if found, tiebreakers := detectTwoPair(cards); found {
+	// Check Two Pair (pass precomputed counts)
+	if found, tiebreakers := detectTwoPair(cards, counts); found {
 		return &Hand{
 			Cards:       cards,
 			Category:    TwoPair,
@@ -470,8 +498,8 @@ func EvaluateHand(cards []Card) *Hand {
 		}
 	}
 
-	// Check One Pair
-	if found, tiebreakers := detectOnePair(cards); found {
+	// Check One Pair (pass precomputed counts)
+	if found, tiebreakers := detectOnePair(cards, counts); found {
 		return &Hand{
 			Cards:       cards,
 			Category:    OnePair,
