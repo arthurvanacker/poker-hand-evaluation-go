@@ -272,3 +272,21 @@ func TestParseCardErrors(t *testing.T) {
 		})
 	}
 }
+
+// Test invalid Rank.String() returns "?" for unknown ranks
+func TestRankStringInvalid(t *testing.T) {
+	invalidRank := Rank(99)
+	result := invalidRank.String()
+	if result != "?" {
+		t.Errorf("Expected '?' for invalid rank, got %q", result)
+	}
+}
+
+// Test invalid Suit.String() returns "?" for unknown suits
+func TestSuitStringInvalid(t *testing.T) {
+	invalidSuit := Suit(99)
+	result := invalidSuit.String()
+	if result != "?" {
+		t.Errorf("Expected '?' for invalid suit, got %q", result)
+	}
+}

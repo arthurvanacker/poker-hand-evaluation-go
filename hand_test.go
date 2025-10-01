@@ -247,3 +247,12 @@ func TestNewHandPreservesCardOrder(t *testing.T) {
 		}
 	}
 }
+
+// Test HandCategory String() returns "Unknown" for invalid category
+func TestHandCategoryStringInvalid(t *testing.T) {
+	invalidCategory := HandCategory(99)
+	result := invalidCategory.String()
+	if result != "Unknown" {
+		t.Errorf("Expected 'Unknown' for invalid category, got %q", result)
+	}
+}
