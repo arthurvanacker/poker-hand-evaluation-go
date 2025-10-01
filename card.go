@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Rank represents the rank of a playing card (2-14, where Ace=14)
 type Rank int
 
@@ -92,3 +97,73 @@ func (c Card) String() string {
 	return c.Rank.String() + c.Suit.String()
 }
 
+// ParseCard parses a card string (e.g., "Ah", "Kd", "10s") into a Card struct.
+// Accepts both "T" and "10" for Ten. Case-insensitive for suits.
+func ParseCard(s string) (Card, error) {
+	if len(s) < 2 {
+		return Card{}, fmt.Errorf("invalid card string: %q (too short)", s)
+	}
+
+	var rankStr, suitStr string
+
+	// Handle "10" notation for Ten
+	if len(s) >= 3 && s[:2] == "10" {
+		rankStr = "10"
+		suitStr = s[2:]
+	} else if len(s) == 2 {
+		rankStr = s[:1]
+		suitStr = s[1:]
+	} else {
+		return Card{}, fmt.Errorf("invalid card string: %q (invalid length)", s)
+	}
+
+	// Parse rank
+	var rank Rank
+	switch strings.ToUpper(rankStr) {
+	case "A":
+		rank = Ace
+	case "K":
+		rank = King
+	case "Q":
+		rank = Queen
+	case "J":
+		rank = Jack
+	case "T", "10":
+		rank = Ten
+	case "9":
+		rank = Nine
+	case "8":
+		rank = Eight
+	case "7":
+		rank = Seven
+	case "6":
+		rank = Six
+	case "5":
+		rank = Five
+	case "4":
+		rank = Four
+	case "3":
+		rank = Three
+	case "2":
+		rank = Two
+	default:
+		return Card{}, fmt.Errorf("invalid rank: %q", rankStr)
+	}
+
+	// Parse suit (case-insensitive)
+	var suit Suit
+	switch strings.ToLower(suitStr) {
+	case "h":
+		suit = Hearts
+	case "d":
+		suit = Diamonds
+	case "c":
+		suit = Clubs
+	case "s":
+		suit = Spades
+	default:
+		return Card{}, fmt.Errorf("invalid suit: %q", suitStr)
+	}
+
+	return Card{Rank: rank, Suit: suit}, nil
+}

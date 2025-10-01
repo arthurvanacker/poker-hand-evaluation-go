@@ -153,3 +153,122 @@ func TestCardString(t *testing.T) {
 	}
 }
 
+// Test ParseCard function - basic valid inputs
+func TestParseCard(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected Card
+	}{
+		{"Ah", Card{Rank: Ace, Suit: Hearts}},
+		{"Kd", Card{Rank: King, Suit: Diamonds}},
+		{"Qc", Card{Rank: Queen, Suit: Clubs}},
+		{"Js", Card{Rank: Jack, Suit: Spades}},
+		{"Th", Card{Rank: Ten, Suit: Hearts}},
+		{"9d", Card{Rank: Nine, Suit: Diamonds}},
+		{"8c", Card{Rank: Eight, Suit: Clubs}},
+		{"7s", Card{Rank: Seven, Suit: Spades}},
+		{"6h", Card{Rank: Six, Suit: Hearts}},
+		{"5d", Card{Rank: Five, Suit: Diamonds}},
+		{"4c", Card{Rank: Four, Suit: Clubs}},
+		{"3s", Card{Rank: Three, Suit: Spades}},
+		{"2h", Card{Rank: Two, Suit: Hearts}},
+		{"2c", Card{Rank: Two, Suit: Clubs}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ParseCard(tt.input)
+			if err != nil {
+				t.Errorf("ParseCard(%q) returned error: %v", tt.input, err)
+			}
+			if got != tt.expected {
+				t.Errorf("ParseCard(%q) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+// Test ParseCard with "10" notation for Ten
+func TestParseCardTenNotation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected Card
+	}{
+		{"10h", Card{Rank: Ten, Suit: Hearts}},
+		{"10d", Card{Rank: Ten, Suit: Diamonds}},
+		{"10c", Card{Rank: Ten, Suit: Clubs}},
+		{"10s", Card{Rank: Ten, Suit: Spades}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ParseCard(tt.input)
+			if err != nil {
+				t.Errorf("ParseCard(%q) returned error: %v", tt.input, err)
+			}
+			if got != tt.expected {
+				t.Errorf("ParseCard(%q) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+// Test ParseCard with case-insensitive suits
+func TestParseCardCaseInsensitive(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected Card
+	}{
+		{"AH", Card{Rank: Ace, Suit: Hearts}},
+		{"aH", Card{Rank: Ace, Suit: Hearts}},
+		{"Ah", Card{Rank: Ace, Suit: Hearts}},
+		{"ah", Card{Rank: Ace, Suit: Hearts}},
+		{"KD", Card{Rank: King, Suit: Diamonds}},
+		{"kd", Card{Rank: King, Suit: Diamonds}},
+		{"QC", Card{Rank: Queen, Suit: Clubs}},
+		{"qc", Card{Rank: Queen, Suit: Clubs}},
+		{"JS", Card{Rank: Jack, Suit: Spades}},
+		{"js", Card{Rank: Jack, Suit: Spades}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ParseCard(tt.input)
+			if err != nil {
+				t.Errorf("ParseCard(%q) returned error: %v", tt.input, err)
+			}
+			if got != tt.expected {
+				t.Errorf("ParseCard(%q) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+// Test ParseCard error cases
+func TestParseCardErrors(t *testing.T) {
+	tests := []struct {
+		input       string
+		description string
+	}{
+		{"", "empty string"},
+		{"A", "missing suit"},
+		{"h", "missing rank"},
+		{"Ax", "invalid suit"},
+		{"Xh", "invalid rank"},
+		{"11h", "invalid rank (11)"},
+		{"1h", "invalid rank (1)"},
+		{"AAh", "too long"},
+		{"Ahh", "too long"},
+		{"10", "missing suit with 10"},
+		{"10x", "invalid suit with 10"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			got, err := ParseCard(tt.input)
+			if err == nil {
+				t.Errorf("ParseCard(%q) expected error for %s, got %v", tt.input, tt.description, got)
+			}
+		})
+	}
+}
