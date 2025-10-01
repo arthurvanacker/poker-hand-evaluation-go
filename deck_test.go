@@ -56,3 +56,61 @@ func TestDeckNoDuplicates(t *testing.T) {
 		seen[card] = true
 	}
 }
+
+// Test that Deal returns the correct number of cards
+func TestDealReturnsCorrectNumberOfCards(t *testing.T) {
+	deck := NewDeck()
+	cards, err := deck.Deal(5)
+	if err != nil {
+		t.Errorf("Deal(5) should not return error, got: %v", err)
+	}
+	if len(cards) != 5 {
+		t.Errorf("Deal(5) should return 5 cards, got %d", len(cards))
+	}
+}
+
+// Test that Deal removes cards from the deck
+func TestDealRemovesCardsFromDeck(t *testing.T) {
+	deck := NewDeck()
+	initialCount := len(deck.Cards)
+	_, err := deck.Deal(5)
+	if err != nil {
+		t.Errorf("Deal(5) should not return error, got: %v", err)
+	}
+	if len(deck.Cards) != initialCount-5 {
+		t.Errorf("After Deal(5), deck should have %d cards, got %d", initialCount-5, len(deck.Cards))
+	}
+}
+
+// Test that dealing more cards than available returns error
+func TestDealMoreThanAvailableReturnsError(t *testing.T) {
+	deck := NewDeck()
+	_, err := deck.Deal(53)
+	if err == nil {
+		t.Error("Deal(53) should return error when deck has only 52 cards")
+	}
+}
+
+// Test that Deal(0) returns empty slice without error
+func TestDealZeroCards(t *testing.T) {
+	deck := NewDeck()
+	cards, err := deck.Deal(0)
+	if err != nil {
+		t.Errorf("Deal(0) should not return error, got: %v", err)
+	}
+	if len(cards) != 0 {
+		t.Errorf("Deal(0) should return empty slice, got %d cards", len(cards))
+	}
+}
+
+// Test that Deal from 52-card deck leaves 47 cards
+func TestDealFiveFromFullDeckLeavesFortySevenCards(t *testing.T) {
+	deck := NewDeck()
+	_, err := deck.Deal(5)
+	if err != nil {
+		t.Errorf("Deal(5) should not return error, got: %v", err)
+	}
+	if len(deck.Cards) != 47 {
+		t.Errorf("After Deal(5) from 52-card deck, should have 47 cards remaining, got %d", len(deck.Cards))
+	}
+}
